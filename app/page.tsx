@@ -2,7 +2,7 @@ import Link from "next/link";
 import { absoluteUrl } from "@/lib/absolute-url";
 
 async function getToday() {
-  const url = absoluteUrl("/api/scoreboard");
+  const url = await absoluteUrl("/api/scoreboard");
   const res = await fetch(url, { next: { revalidate: 60 } });
   if (!res.ok) return { events: [] as any[] };
   return res.json();
