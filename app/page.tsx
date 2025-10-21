@@ -4,7 +4,7 @@ import { absoluteUrl } from "@/lib/absolute-url";
 async function getToday() {
   const url = await absoluteUrl("/api/scoreboard");
   const res = await fetch(url, { next: { revalidate: 60 } });
-  if (!res.ok) return { events: [] as any[] };
+  if (!res.ok) return { events: [] as Array<unknown> };
   return res.json();
 }
 
@@ -25,21 +25,22 @@ export default async function Home() {
 
       {events.length === 0 && <p>No games today.</p>}
 
-      {events.map((g: any) => {
-        const time = formatTime(g.date);
-        const channels: string[] = Array.from(new Set(g.broadcasts.flatMap((b: any) => b.names || [])));
+      {events.map((g: unknown) => {
+        const game = g as { date?: string; broadcasts?: Array<{ names?: string[] }>; away?: { short?: string }; home?: { short?: string }; flags?: { isLeaguePass?: boolean; hasLocalRSN?: boolean } };
+        const time = formatTime(game.date ?? '');
+        const channels: string[] = Array.from(new Set(game.broadcasts?.flatMap((b: { names?: string[] }) => b.names || []) || []));
         return (
-          <div key={g.id} className="rounded-lg border p-3">
+          <div key={(g as { id?: string }).id} className="rounded-lg border p-3">
             <div className="flex items-center justify-between">
-              <div className="font-medium">{g.away.short} @ {g.home.short}</div>
+              <div className="font-medium">{game.away?.short} @ {game.home?.short}</div>
               <div className="tabular-nums">{time}</div>
             </div>
             <div className="mt-2 flex flex-wrap gap-2">
               {channels.map((n) => (
                 <span key={n} className="rounded bg-[var(--accent)] px-2 py-1 text-xs text-white">{n}</span>
               ))}
-              {g.flags?.isLeaguePass && <span className="rounded border px-2 py-1 text-xs">League Pass</span>}
-              {g.flags?.isLeaguePass && g.flags?.hasLocalRSN && (
+              {game.flags?.isLeaguePass && <span className="rounded border px-2 py-1 text-xs">League Pass</span>}
+              {game.flags?.isLeaguePass && game.flags?.hasLocalRSN && (
                 <span className="rounded bg-neutral-200 px-2 py-1 text-xs">Blackout risk</span>
               )}
             </div>

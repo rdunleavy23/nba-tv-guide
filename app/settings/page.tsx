@@ -1,5 +1,6 @@
 'use client'
 import { useEffect } from 'react'
+import Link from 'next/link'
 import { useSettings } from '@/lib/settings'
 import { teamColors } from '@/lib/teamColors'
 
@@ -17,7 +18,7 @@ export default function SettingsPage() {
     <main className="mx-auto max-w-md p-4 space-y-6">
       <header className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">Settings</h1>
-        <a href="/" className="rounded border px-3 py-1.5">Today</a>
+        <Link href="/" className="rounded border px-3 py-1.5">Today</Link>
       </header>
 
       <section className="space-y-3">

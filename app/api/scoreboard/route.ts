@@ -18,26 +18,26 @@ export async function GET(req: Request) {
   if (!res.ok) return NextResponse.json({ error: 'upstream error' }, { status: 502 });
   const data = await res.json();
 
-  const events = (data.events ?? []).map((e: any) => {
-    const comp = e.competitions?.[0] ?? {};
-    const broadcasts = (comp.broadcasts ?? []).map((b: any) => ({
-      market: b.market,
-      names: b.names ?? (b.name ? [b.name] : []),
+  const events = (data.events ?? []).map((e: unknown) => {
+    const comp = (e as { competitions?: unknown[] })?.competitions?.[0] ?? {};
+    const broadcasts = ((comp as { broadcasts?: unknown[] })?.broadcasts ?? []).map((b: unknown) => ({
+      market: (b as { market?: string })?.market,
+      names: (b as { names?: string[] })?.names ?? ((b as { name?: string })?.name ? [(b as { name: string }).name] : []),
     }));
-    const home = comp.competitors?.find((c: any) => c.homeAway === 'home')?.team ?? {};
-    const away = comp.competitors?.find((c: any) => c.homeAway === 'away')?.team ?? {};
+    const home = ((comp as { competitors?: unknown[] })?.competitors ?? []).find((c: unknown) => (c as { homeAway?: string })?.homeAway === 'home') as { team?: unknown } ?? {};
+    const away = ((comp as { competitors?: unknown[] })?.competitors ?? []).find((c: unknown) => (c as { homeAway?: string })?.homeAway === 'away') as { team?: unknown } ?? {};
 
-    const allNames = broadcasts.flatMap((b: any) => b.names);
+    const allNames = broadcasts.flatMap((b: { names?: string[] }) => b.names ?? []);
     const isLeaguePass = allNames.some((n: string) => /league pass/i.test(n));
-    const hasLocalRSN = broadcasts.some((b: any) => b.market === 'local');
-    const hasNationalTV = broadcasts.some((b: any) => b.market === 'national');
+    const hasLocalRSN = broadcasts.some((b: { market?: string }) => b.market === 'local');
+    const hasNationalTV = broadcasts.some((b: { market?: string }) => b.market === 'national');
 
     return {
-      id: e.id,
-      date: comp.date,
-      status: e.status?.type?.name,
-      home: { name: home.displayName, short: home.abbreviation },
-      away: { name: away.displayName, short: away.abbreviation },
+      id: (e as { id?: string })?.id,
+      date: (comp as { date?: string })?.date,
+      status: (e as { status?: { type?: { name?: string } } })?.status?.type?.name,
+      home: { name: (home.team as { displayName?: string })?.displayName, short: (home.team as { abbreviation?: string })?.abbreviation },
+      away: { name: (away.team as { displayName?: string })?.displayName, short: (away.team as { abbreviation?: string })?.abbreviation },
       broadcasts,
       flags: { isLeaguePass, hasLocalRSN, hasNationalTV },
     };
