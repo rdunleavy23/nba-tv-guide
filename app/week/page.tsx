@@ -90,17 +90,18 @@ export default function WeekPage() {
       ) : (
         <div className="space-y-3">
           {filteredGames.map((game) => (
-            <GameCard
-              key={game.id}
-              game={game}
-              tz={settings.tz}
-              hour12={settings.hourFormat === '12'}
-              compact={settings.compact}
-              showLeaguePass={settings.showLeaguePass}
-              showBlackout={settings.showBlackout}
-              networkColorMode={settings.networkColorMode}
-              hiddenNetworks={settings.hiddenNetworks}
-            />
+              <GameCard
+                key={game.id}
+                game={game}
+                tz={settings.tz}
+                hour12={settings.hourFormat === '12'}
+                compact={settings.compact}
+                showLeaguePass={settings.showLeaguePass}
+                showBlackout={settings.showBlackout}
+                networkColorMode={settings.networkColorMode}
+                hiddenNetworks={settings.hiddenNetworks}
+                noSpoilers={settings.noSpoilers}
+              />
           ))}
         </div>
       )}

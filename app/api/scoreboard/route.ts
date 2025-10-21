@@ -76,8 +76,15 @@ export async function GET(request: NextRequest) {
       const broadcasts: string[] = [];
       if (competition?.broadcasts) {
         (competition.broadcasts as Record<string, unknown>[]).forEach((broadcast: Record<string, unknown>) => {
-          if (broadcast.names) {
+          // Handle multiple possible broadcast name formats defensively
+          if (broadcast.names && Array.isArray(broadcast.names)) {
             broadcasts.push(...(broadcast.names as string[]));
+          } else if (broadcast.name && typeof broadcast.name === 'string') {
+            broadcasts.push(broadcast.name);
+          } else if (broadcast.shortName && typeof broadcast.shortName === 'string') {
+            broadcasts.push(broadcast.shortName);
+          } else if (broadcast.callSign && typeof broadcast.callSign === 'string') {
+            broadcasts.push(broadcast.callSign);
           }
         });
       }
@@ -85,12 +92,40 @@ export async function GET(request: NextRequest) {
       const isFinished = ((competition?.status as Record<string, unknown>)?.type as Record<string, unknown>)?.state === 'post';
       const isLeaguePass = (competition?.flags as string[])?.includes('league-pass') || false;
       
+      // Defensive team data extraction
+      const homeTeamName = homeTeam?.team ? 
+        ((homeTeam.team as Record<string, unknown>)?.displayName as string) || 
+        ((homeTeam.team as Record<string, unknown>)?.name as string) || 
+        ((homeTeam.team as Record<string, unknown>)?.shortDisplayName as string) || 
+        'Unknown' : 'Unknown';
+        
+      const awayTeamName = awayTeam?.team ? 
+        ((awayTeam.team as Record<string, unknown>)?.displayName as string) || 
+        ((awayTeam.team as Record<string, unknown>)?.name as string) || 
+        ((awayTeam.team as Record<string, unknown>)?.shortDisplayName as string) || 
+        'Unknown' : 'Unknown';
+        
+      const homeAbbr = homeTeam?.team ? 
+        ((homeTeam.team as Record<string, unknown>)?.abbreviation as string) || 
+        ((homeTeam.team as Record<string, unknown>)?.shortName as string) || 
+        homeTeamName.substring(0, 3).toUpperCase() : 'UNK';
+        
+      const awayAbbr = awayTeam?.team ? 
+        ((awayTeam.team as Record<string, unknown>)?.abbreviation as string) || 
+        ((awayTeam.team as Record<string, unknown>)?.shortName as string) || 
+        awayTeamName.substring(0, 3).toUpperCase() : 'UNK';
+      
+      // Log warnings for unexpected data shapes (not errors)
+      if (!homeTeam || !awayTeam) {
+        console.warn('Missing team data for game:', event.id);
+      }
+      
       return {
         id: event.id as string,
-        homeTeam: ((homeTeam?.team as Record<string, unknown>)?.displayName as string) || '',
-        awayTeam: ((awayTeam?.team as Record<string, unknown>)?.displayName as string) || '',
-        homeAbbr: ((homeTeam?.team as Record<string, unknown>)?.abbreviation as string) || '',
-        awayAbbr: ((awayTeam?.team as Record<string, unknown>)?.abbreviation as string) || '',
+        homeTeam: homeTeamName,
+        awayTeam: awayTeamName,
+        homeAbbr,
+        awayAbbr,
         time: event.date as string,
         status: ((competition?.status as Record<string, unknown>)?.type as Record<string, unknown>)?.name as string || event.status as string,
         broadcasts: [...new Set(broadcasts)], // deduplicate

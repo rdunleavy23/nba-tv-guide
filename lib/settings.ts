@@ -59,6 +59,7 @@ export const useSettingsStore = create<Settings & {
     }),
     {
       name: 'screenassist-settings',
+      skipHydration: true, // Prevent hydration mismatch
     }
   )
 );

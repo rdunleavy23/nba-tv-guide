@@ -1,11 +1,14 @@
 'use client';
 
+import { useRef } from 'react';
+
 interface DateScrollerProps {
   selectedDate: string;
   onDateSelect: (date: string) => void;
 }
 
 export default function DateScroller({ selectedDate, onDateSelect }: DateScrollerProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
   const generateDates = () => {
     const dates = [];
     const today = new Date();
@@ -42,9 +45,31 @@ export default function DateScroller({ selectedDate, onDateSelect }: DateScrolle
 
   const dates = generateDates();
 
+  // Handle keyboard navigation
+  const handleKeyDown = (e: React.KeyboardEvent, currentIndex: number) => {
+    if (e.key === 'ArrowLeft' && currentIndex > 0) {
+      const prevDate = dates[currentIndex - 1];
+      onDateSelect(formatDateKey(prevDate));
+      // Focus the previous button
+      const prevButton = containerRef.current?.children[currentIndex - 1] as HTMLButtonElement;
+      prevButton?.focus();
+    } else if (e.key === 'ArrowRight' && currentIndex < dates.length - 1) {
+      const nextDate = dates[currentIndex + 1];
+      onDateSelect(formatDateKey(nextDate));
+      // Focus the next button
+      const nextButton = containerRef.current?.children[currentIndex + 1] as HTMLButtonElement;
+      nextButton?.focus();
+    }
+  };
+
   return (
-    <div className="flex gap-2 overflow-x-auto pb-2 mb-4">
-      {dates.map((date) => {
+    <div 
+      ref={containerRef}
+      className="flex gap-2 overflow-x-auto pb-2 mb-4"
+      role="tablist"
+      aria-label="Date selection"
+    >
+      {dates.map((date, index) => {
         const dateKey = formatDateKey(date);
         const isSelected = dateKey === selectedDate;
         
@@ -52,11 +77,16 @@ export default function DateScroller({ selectedDate, onDateSelect }: DateScrolle
           <button
             key={dateKey}
             onClick={() => onDateSelect(dateKey)}
-            className={`whitespace-nowrap px-3 py-2 rounded-full text-sm font-medium transition-colors ${
+            onKeyDown={(e) => handleKeyDown(e, index)}
+            className={`whitespace-nowrap px-3 py-2 rounded-full text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-offset-2 ${
               isSelected
                 ? 'bg-[var(--accent)] text-white'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
+            role="tab"
+            aria-selected={isSelected}
+            aria-controls={`date-${dateKey}`}
+            tabIndex={isSelected ? 0 : -1}
           >
             {formatDate(date)}
           </button>

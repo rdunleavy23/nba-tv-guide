@@ -1,9 +1,10 @@
+import Link from 'next/link';
 import { absoluteUrl } from '@/lib/absolute-url';
 import { defaultSettings } from '@/lib/settings';
 import GameCard from '@/components/GameCard';
 import { NormalizedGame } from '@/app/api/scoreboard/route';
 
-async function getTodaysGames(): Promise<NormalizedGame[]> {
+async function getTodaysGames(): Promise<{ games: NormalizedGame[]; error?: string }> {
   try {
     const url = absoluteUrl('/api/scoreboard');
     const response = await fetch(url, { 
@@ -11,22 +12,58 @@ async function getTodaysGames(): Promise<NormalizedGame[]> {
     });
     
     if (!response.ok) {
-      throw new Error('Failed to fetch games');
+      throw new Error(`Failed to fetch games: ${response.status}`);
     }
     
     const data = await response.json();
-    return data.games || [];
+    return { games: data.games || [] };
   } catch (error) {
     console.error('Error fetching games:', error);
-    return [];
+    return { 
+      games: [], 
+      error: error instanceof Error ? error.message : 'Failed to load games' 
+    };
   }
 }
 
 export default async function Home() {
-  const games = await getTodaysGames();
+  const result = await getTodaysGames();
+  
+  // Handle error state
+  if (result.error) {
+    return (
+      <div className="p-4">
+        <h1 className="text-2xl font-bold mb-6 text-gray-900">
+          NBA Games Today
+        </h1>
+        
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-center">
+          <p className="text-yellow-800 mb-3">
+            Unable to load games: {result.error}
+          </p>
+          <div className="space-x-3">
+            <Link 
+              href="/"
+              className="bg-yellow-600 text-white px-4 py-2 rounded-md hover:bg-yellow-700 inline-block"
+            >
+              Retry
+            </Link>
+            <a 
+              href="https://www.espn.com/nba/scoreboard"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-yellow-600 hover:text-yellow-800 underline"
+            >
+              View on ESPN.com
+            </a>
+          </div>
+        </div>
+      </div>
+    );
+  }
   
   // Filter games based on default settings
-  const filteredGames = games.filter(game => {
+  const filteredGames = result.games.filter(game => {
     if (defaultSettings.hideFinished && game.flags.isFinished) {
       return false;
     }
@@ -56,6 +93,7 @@ export default async function Home() {
               showBlackout={defaultSettings.showBlackout}
               networkColorMode={defaultSettings.networkColorMode}
               hiddenNetworks={defaultSettings.hiddenNetworks}
+              noSpoilers={defaultSettings.noSpoilers}
             />
           ))}
         </div>

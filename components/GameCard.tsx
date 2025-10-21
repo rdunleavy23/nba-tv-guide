@@ -1,6 +1,6 @@
 'use client';
 
-import { normalizeNetworkName, getBadgeStyle, sortNetworks } from '@/lib/networks';
+import { getBadgeStyle, sortNetworks } from '@/lib/networks';
 import { NormalizedGame } from '@/app/api/scoreboard/route';
 
 interface GameCardProps {
@@ -12,6 +12,7 @@ interface GameCardProps {
   showBlackout: boolean;
   networkColorMode: 'brand' | 'mono';
   hiddenNetworks: string[];
+  noSpoilers: boolean;
 }
 
 export default function GameCard({
@@ -23,6 +24,7 @@ export default function GameCard({
   showBlackout,
   networkColorMode,
   hiddenNetworks,
+  noSpoilers,
 }: GameCardProps) {
   const formatTime = (timeString: string) => {
     try {
@@ -40,13 +42,10 @@ export default function GameCard({
   };
 
   const filteredBroadcasts = game.broadcasts
-    .filter(broadcast => !hiddenNetworks.includes(normalizeNetworkName(broadcast)))
-    .map(normalizeNetworkName);
+    .filter(broadcast => !hiddenNetworks.includes(broadcast))
+    .map(broadcast => broadcast);
 
   const sortedBroadcasts = sortNetworks(filteredBroadcasts);
-  const hasLocalRSN = sortedBroadcasts.some(network => 
-    !['ESPN', 'ABC', 'TNT', 'NBA TV', 'Peacock', 'Prime Video', 'NBC Sports', 'FOX Sports'].includes(network)
-  );
 
   const paddingClass = compact ? 'p-2' : 'p-3';
   const textSizeClass = compact ? 'text-sm' : 'text-base';
@@ -59,17 +58,17 @@ export default function GameCard({
         <div className="font-medium">
           {game.awayAbbr} @ {game.homeAbbr}
         </div>
-        <div className="text-gray-600">
-          {formatTime(game.time)}
+        <div className="text-gray-600 tabular-nums">
+          {noSpoilers && game.flags.isFinished ? 'Final' : formatTime(game.time)}
         </div>
       </div>
 
       {/* Channel badges row */}
-      <div className="flex flex-wrap gap-1">
+      <div className="inline-flex flex-wrap gap-1 min-h-[2rem]">
         {sortedBroadcasts.map((network, index) => (
           <span
             key={index}
-            className={`rounded-full ${badgeSizeClass} font-medium`}
+            className={`rounded-full ${badgeSizeClass} font-medium break-words`}
             style={getBadgeStyle(network, networkColorMode)}
           >
             {network}
@@ -82,7 +81,9 @@ export default function GameCard({
           </span>
         )}
         
-        {showBlackout && game.flags.isLeaguePass && hasLocalRSN && (
+        {showBlackout && game.flags.isLeaguePass && sortedBroadcasts.some(network => 
+          !['ESPN', 'ABC', 'TNT', 'NBA TV', 'Peacock', 'Prime Video', 'NBC Sports', 'FOX Sports'].includes(network)
+        ) && (
           <span className={`rounded-full border border-orange-400 text-orange-700 ${badgeSizeClass}`}>
             Blackout risk
           </span>

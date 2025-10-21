@@ -25,6 +25,26 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              try {
+                const settings = localStorage.getItem('screenassist-settings');
+                if (settings) {
+                  const parsed = JSON.parse(settings);
+                  if (parsed.state?.favoriteTeam) {
+                    // Set accent color based on favorite team
+                    document.documentElement.style.setProperty('--accent', '#E31837');
+                  }
+                }
+              } catch (e) {
+                // Ignore localStorage errors during SSR
+              }
+            `,
+          }}
+        />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >

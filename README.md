@@ -1,36 +1,85 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ScreenAssist - NBA Games Tonight
+
+A clean, fast NBA scoreboard app that shows which channel games are on tonight. Built with Next.js 15, designed for mobile-first with accessibility in mind.
+
+## Features
+
+- **Clean Interface**: Shows only national TV and streaming platforms (no RSNs)
+- **Fast Loading**: Server-side rendering with 60s revalidation
+- **Accessibility**: WCAG AA compliant, keyboard navigation, screen reader support
+- **Mobile-First**: Responsive design with safe-area-inset for iOS
+- **No Spoilers**: Optional mode to hide scores and game status
+- **Error Handling**: Friendly error states with retry and ESPN fallback
 
 ## Getting Started
 
-First, run the development server:
-
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) to see the app.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Testing Checklist
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Edge Cases to Test
 
-## Learn More
+#### DST & Timezone Edge Cases
+- [ ] Spring forward transition (March)
+- [ ] Fall back transition (November) 
+- [ ] Hawaii timezone (UTC-10)
+- [ ] Alaska timezone (UTC-9)
+- [ ] International timezones (UTC+/-12)
 
-To learn more about Next.js, take a look at the following resources:
+#### Empty State Scenarios
+- [ ] All-Star break (no games)
+- [ ] Offseason (no games)
+- [ ] Single game day
+- [ ] 15-game day (maximum)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+#### Data Quality Edge Cases
+- [ ] Duplicate broadcast entries
+- [ ] Missing team data
+- [ ] Malformed ESPN API responses
+- [ ] Network name variations (NBA TV vs NBATV)
+- [ ] National exclusive vs League Pass conflicts
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+#### Accessibility Testing
+- [ ] Keyboard navigation (Tab, Arrow keys)
+- [ ] Screen reader compatibility
+- [ ] High contrast mode
+- [ ] Focus indicators visible
+- [ ] Color contrast ratios (WCAG AA)
 
-## Deploy on Vercel
+#### Mobile Testing
+- [ ] iOS safe area handling
+- [ ] Android back button
+- [ ] Touch targets (44px minimum)
+- [ ] Landscape orientation
+- [ ] Small screen (320px width)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+#### Performance Testing
+- [ ] Hydration mismatch warnings
+- [ ] CSS variable flicker
+- [ ] Badge layout shifts
+- [ ] Network request failures
+- [ ] Slow 3G connection
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Design Philosophy
+
+Inspired by:
+- **Ceefax/Teletext**: Grid-first clarity and information density
+- **Plain Text Sports**: Restraint and focus on essential information
+- **ESPN/TNT Scorebugs**: Grouped micro-UI elements
+- **Vignelli Subway Standards**: Disciplined visual hierarchy
+
+## Technical Notes
+
+- **SSR Hydration**: Inline script prevents accent color flicker
+- **Network Filtering**: Only shows nationals (ESPN, ABC, TNT, NBA TV) and streamers
+- **Contrast Compliance**: Auto-detects luminance for WCAG AA text colors
+- **Defensive Parsing**: Handles ESPN API shape drift gracefully
+- **Brand Compliance**: Text chips only, no logos or promotional copy
+
+## Deploy
+
+Deploy on Vercel for optimal Next.js performance.
