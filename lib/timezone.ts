@@ -1,229 +1,113 @@
 /**
- * Timezone utilities for proper game time localization
- * Handles browser detection, validation, and defensive formatting
+ * Time formatting utilities for NBA Tonight
+ * Handles 12-hour format for US, odd offsets for international, no timezone abbreviations
  */
 
-// Common timezone mappings for better UX
-const TIMEZONE_DISPLAY_NAMES: Record<string, string> = {
-  'America/New_York': 'Eastern Time',
-  'America/Chicago': 'Central Time', 
-  'America/Denver': 'Mountain Time',
-  'America/Los_Angeles': 'Pacific Time',
-  'America/Anchorage': 'Alaska Time',
-  'Pacific/Honolulu': 'Hawaii Time',
-  'Europe/London': 'London Time',
-  'Europe/Paris': 'Central European Time',
-  'Asia/Tokyo': 'Japan Time',
-  'Australia/Sydney': 'Sydney Time',
-};
-
-// Fallback timezone chain
-const FALLBACK_TIMEZONES = [
-  'America/New_York', // Default fallback
-  'UTC', // Universal fallback
-];
-
 /**
- * Get the browser's detected timezone
- * Returns the IANA timezone identifier
- */
-export function getBrowserTimezone(): string {
-  try {
-    return Intl.DateTimeFormat().resolvedOptions().timeZone;
-  } catch (error) {
-    console.warn('Failed to detect browser timezone:', error);
-    return 'America/New_York';
-  }
-}
-
-/**
- * Validate if a timezone string is a valid IANA timezone
- */
-export function isValidTimezone(tz: string): boolean {
-  try {
-    Intl.DateTimeFormat(undefined, { timeZone: tz });
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-/**
- * Get timezone with fallback chain
- * 1. Preferred timezone (if valid)
- * 2. Browser timezone
- * 3. Fallback timezones
- */
-export function getTimezoneWithFallback(preferredTz?: string): string {
-  // Check preferred timezone first
-  if (preferredTz && isValidTimezone(preferredTz)) {
-    return preferredTz;
-  }
-  
-  // Try browser timezone
-  const browserTz = getBrowserTimezone();
-  if (isValidTimezone(browserTz)) {
-    return browserTz;
-  }
-  
-  // Use fallback chain
-  for (const fallbackTz of FALLBACK_TIMEZONES) {
-    if (isValidTimezone(fallbackTz)) {
-      return fallbackTz;
-    }
-  }
-  
-  // Ultimate fallback
-  return 'America/New_York';
-}
-
-/**
- * Format game time with defensive error handling
- * Handles invalid dates, timezone errors, and provides fallbacks
+ * Format game time to local timezone
+ * Always localizes to user TZ, 12-hour format for US, handles half-hour/odd offsets
+ * Never shows timezone abbreviations (keep terse)
  */
 export function formatGameTime(
-  isoString: string, 
-  tz: string, 
-  hour12: boolean
+  utcTimeString: string, 
+  timezone: string = 'America/New_York',
+  hour12: boolean = true
 ): string {
   try {
-    // Validate input
-    if (!isoString || typeof isoString !== 'string') {
-      console.warn('Invalid ISO string provided:', isoString);
-      return 'TBD';
-    }
+    const date = new Date(utcTimeString);
     
-    // Parse the date
-    const date = new Date(isoString);
-    
-    // Check if date is valid
     if (isNaN(date.getTime())) {
-      console.warn('Invalid date parsed from:', isoString);
       return 'TBD';
     }
     
-    // Validate timezone
-    const validTz = isValidTimezone(tz) ? tz : getTimezoneWithFallback();
+    // Use user's detected timezone if available, fallback to provided timezone
+    const userTimezone = typeof window !== 'undefined' 
+      ? Intl.DateTimeFormat().resolvedOptions().timeZone 
+      : timezone;
     
-    // Format with timezone
     const options: Intl.DateTimeFormatOptions = {
-      timeZone: validTz,
+      timeZone: userTimezone,
       hour: 'numeric',
       minute: '2-digit',
-      hour12,
+      hour12: hour12,
     };
     
     return date.toLocaleTimeString('en-US', options);
-    
   } catch (error) {
-    console.warn('Error formatting game time:', error, {
-      isoString,
-      tz,
-      hour12
-    });
-    
-    // Ultimate fallback - try without timezone
-    try {
-      const date = new Date(isoString);
-      if (!isNaN(date.getTime())) {
-        return date.toLocaleTimeString('en-US', {
-          hour: 'numeric',
-          minute: '2-digit',
-          hour12,
-        });
-      }
-    } catch {
-      // Ignore secondary error
-    }
-    
+    console.warn('Error formatting time:', error);
     return 'TBD';
   }
 }
 
 /**
- * Get display name for timezone
+ * Get "tonight" boundaries in user's local timezone
+ * Returns start and end timestamps for 3:59:59 AM – 11:59:59 PM local
  */
-export function getTimezoneDisplayName(tz: string): string {
-  return TIMEZONE_DISPLAY_NAMES[tz] || tz.replace('_', ' ');
+export function getTonightBoundaries(timezone: string = 'America/New_York'): {
+  start: string;
+  end: string;
+} {
+  const now = new Date();
+  
+  // Get today's date in the user's timezone
+  const today = new Intl.DateTimeFormat('en-CA', { 
+    timeZone: timezone,
+    year: 'numeric',
+    month: '2-digit', 
+    day: '2-digit'
+  }).format(now);
+  
+  // Create start time: 3:59:59 AM local
+  const startTime = new Date(`${today}T03:59:59`);
+  const startUtc = new Date(startTime.toLocaleString('en-US', { timeZone: timezone }));
+  
+  // Create end time: 11:59:59 PM local  
+  const endTime = new Date(`${today}T23:59:59`);
+  const endUtc = new Date(endTime.toLocaleString('en-US', { timeZone: timezone }));
+  
+  return {
+    start: startUtc.toISOString(),
+    end: endUtc.toISOString(),
+  };
 }
 
 /**
- * Get timezone abbreviation (e.g., "EST", "PST")
+ * Check if a game time falls within "tonight" boundaries
  */
-export function getTimezoneAbbreviation(tz: string): string {
+export function isGameTonight(
+  gameTimeUtc: string, 
+  timezone: string = 'America/New_York'
+): boolean {
   try {
-    const now = new Date();
-    const formatter = new Intl.DateTimeFormat('en-US', {
-      timeZone: tz,
-      timeZoneName: 'short'
-    });
+    const gameTime = new Date(gameTimeUtc);
+    const boundaries = getTonightBoundaries(timezone);
+    const start = new Date(boundaries.start);
+    const end = new Date(boundaries.end);
     
-    const parts = formatter.formatToParts(now);
-    const timeZoneName = parts.find(part => part.type === 'timeZoneName');
-    
-    return timeZoneName?.value || tz.split('/').pop()?.substring(0, 3).toUpperCase() || 'UTC';
+    return gameTime >= start && gameTime <= end;
   } catch (error) {
-    console.warn('Error getting timezone abbreviation:', error);
-    return tz.split('/').pop()?.substring(0, 3).toUpperCase() || 'UTC';
-  }
-}
-
-/**
- * Get all common US timezones for settings UI
- */
-export function getCommonTimezones(): Array<{ value: string; label: string }> {
-  return [
-    { value: 'America/New_York', label: 'Eastern Time (ET)' },
-    { value: 'America/Chicago', label: 'Central Time (CT)' },
-    { value: 'America/Denver', label: 'Mountain Time (MT)' },
-    { value: 'America/Los_Angeles', label: 'Pacific Time (PT)' },
-    { value: 'America/Anchorage', label: 'Alaska Time (AT)' },
-    { value: 'Pacific/Honolulu', label: 'Hawaii Time (HT)' },
-  ];
-}
-
-/**
- * Check if current timezone is in DST
- */
-export function isDST(tz: string = getBrowserTimezone()): boolean {
-  try {
-    const now = new Date();
-    const jan = new Date(now.getFullYear(), 0, 1);
-    const jul = new Date(now.getFullYear(), 6, 1);
-    
-    const janOffset = new Intl.DateTimeFormat('en', {
-      timeZone: tz,
-      timeZoneName: 'longOffset'
-    }).formatToParts(jan).find(part => part.type === 'timeZoneName')?.value;
-    
-    const julOffset = new Intl.DateTimeFormat('en', {
-      timeZone: tz,
-      timeZoneName: 'longOffset'
-    }).formatToParts(jul).find(part => part.type === 'timeZoneName')?.value;
-    
-    return janOffset !== julOffset;
-  } catch {
+    console.warn('Error checking if game is tonight:', error);
     return false;
   }
 }
 
 /**
- * Debug info for development
+ * Get local weekday + date string (e.g., "Tue, Oct 21")
  */
-export function getTimezoneDebugInfo(tz: string): {
-  timezone: string;
-  displayName: string;
-  isValid: boolean;
-  isDST: boolean;
-  browserTz: string;
-  currentTime: string;
-} {
-  return {
-    timezone: tz,
-    displayName: getTimezoneDisplayName(tz),
-    isValid: isValidTimezone(tz),
-    isDST: isDST(tz),
-    browserTz: getBrowserTimezone(),
-    currentTime: formatGameTime(new Date().toISOString(), tz, true),
+export function getLocalDateString(timezone: string = 'America/New_York'): string {
+  const now = new Date();
+  
+  // Use user's detected timezone if available, fallback to provided timezone
+  const userTimezone = typeof window !== 'undefined' 
+    ? Intl.DateTimeFormat().resolvedOptions().timeZone 
+    : timezone;
+  
+  const options: Intl.DateTimeFormatOptions = {
+    timeZone: userTimezone,
+    weekday: 'short',
+    month: 'short', 
+    day: 'numeric',
   };
+  
+  return now.toLocaleDateString('en-US', options);
 }

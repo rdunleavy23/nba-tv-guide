@@ -1,49 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { filterToNationalOnly } from '@/lib/national';
 
-export interface Broadcast {
-  name?: string;
-  names?: string[];
-  shortName?: string;
-}
+export const runtime = 'edge';
 
 export interface Game {
   id: string;
-  date: string;
-  status: string;
-  home: {
-    name: string;
-    short: string;
-  };
-  away: {
-    name: string;
-    short: string;
-  };
-  broadcasts: Array<{
-    market: string;
-    names: string[];
-  }>;
-  flags: {
-    isLeaguePass: boolean;
-    hasLocalRSN: boolean;
-    hasNationalTV: boolean;
-  };
+  startTimeUtc: string;
+  teams: { away: { abbr: string }, home: { abbr: string } };
+  networks: string[]; // national only for UI
+  allBroadcasts: string[]; // includes RSNs for internal blackout calc
+  leaguePass: boolean;
 }
-
-export interface NormalizedGame {
-  id: string;
-  homeTeam: string;
-  awayTeam: string;
-  homeAbbr: string;
-  awayAbbr: string;
-  time: string;
-  status: string;
-  broadcasts: string[];
-  flags: {
-    isLeaguePass: boolean;
-    isFinished: boolean;
-  };
-}
-
 
 export async function GET(request: NextRequest) {
   try {
@@ -53,8 +20,12 @@ export async function GET(request: NextRequest) {
     const espnUrl = `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates=${date}`;
     
     const response = await fetch(espnUrl, {
+      next: { 
+        revalidate: 30,
+        tags: ['scoreboard'] 
+      },
       headers: {
-        'User-Agent': 'ScreenAssist/1.0',
+        'User-Agent': 'NBA Tonight/1.0',
       },
     });
     
@@ -66,30 +37,33 @@ export async function GET(request: NextRequest) {
     
     // Handle the actual ESPN API response format
     const events = data.events || [];
-    const games = events.map((event: Record<string, unknown>) => {
+    const games: Game[] = events.map((event: Record<string, unknown>) => {
       const competition = (event.competitions as Record<string, unknown>[])?.[0];
       const competitors = (competition?.competitors as Record<string, unknown>[]) || [];
       
       const homeTeam = competitors.find((c: Record<string, unknown>) => c.homeAway === 'home');
       const awayTeam = competitors.find((c: Record<string, unknown>) => c.homeAway === 'away');
       
-      const broadcasts: string[] = [];
+      // Collect ALL broadcasts (including RSNs for internal blackout calc)
+      const allBroadcasts: string[] = [];
       if (competition?.broadcasts) {
         (competition.broadcasts as Record<string, unknown>[]).forEach((broadcast: Record<string, unknown>) => {
           // Handle multiple possible broadcast name formats defensively
           if (broadcast.names && Array.isArray(broadcast.names)) {
-            broadcasts.push(...(broadcast.names as string[]));
+            allBroadcasts.push(...(broadcast.names as string[]));
           } else if (broadcast.name && typeof broadcast.name === 'string') {
-            broadcasts.push(broadcast.name);
+            allBroadcasts.push(broadcast.name);
           } else if (broadcast.shortName && typeof broadcast.shortName === 'string') {
-            broadcasts.push(broadcast.shortName);
+            allBroadcasts.push(broadcast.shortName);
           } else if (broadcast.callSign && typeof broadcast.callSign === 'string') {
-            broadcasts.push(broadcast.callSign);
+            allBroadcasts.push(broadcast.callSign);
           }
         });
       }
       
-      const isFinished = ((competition?.status as Record<string, unknown>)?.type as Record<string, unknown>)?.state === 'post';
+      // Filter to national networks only for UI (strip RSNs)
+      const nationalNetworks = filterToNationalOnly(allBroadcasts);
+      
       const isLeaguePass = (competition?.flags as string[])?.includes('league-pass') || false;
       
       // Defensive team data extraction
@@ -139,21 +113,22 @@ export async function GET(request: NextRequest) {
       
       return {
         id: event.id as string,
-        homeTeam: homeTeamName,
-        awayTeam: awayTeamName,
-        homeAbbr,
-        awayAbbr,
-        time: processedTime,
-        status: ((competition?.status as Record<string, unknown>)?.type as Record<string, unknown>)?.name as string || event.status as string,
-        broadcasts: [...new Set(broadcasts)], // deduplicate
-        flags: {
-          isLeaguePass,
-          isFinished,
+        startTimeUtc: processedTime,
+        teams: { 
+          away: { abbr: awayAbbr }, 
+          home: { abbr: homeAbbr } 
         },
+        networks: nationalNetworks, // national only for UI
+        allBroadcasts: [...new Set(allBroadcasts)], // includes RSNs for internal use
+        leaguePass: isLeaguePass,
       };
     });
     
-    return NextResponse.json({ games, date, gameCount: games.length });
+    return NextResponse.json({ games, date, gameCount: games.length }, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=60',
+      },
+    });
   } catch (error) {
     console.error('Scoreboard API error:', error);
     return NextResponse.json(

@@ -1,66 +1,43 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+/**
+ * Simplified localStorage helpers for NBA Tonight
+ * Only handles ZIP code override - no complex state management
+ */
 
-export interface Settings {
-  favoriteTeam: string;
-  compact: boolean;
-  tz: string;
-  hourFormat: '12' | '24';
-  hideFinished: boolean;
-  showLeaguePass: boolean;
-  showBlackout: boolean;
-  hiddenNetworks: string[];
-  networkColorMode: 'brand' | 'mono';
-  autoRefreshSec: number;
+/**
+ * Get ZIP code override from localStorage
+ */
+export function getZipOverride(): string | null {
+  if (typeof window === 'undefined') return null;
+  
+  try {
+    return localStorage.getItem('screenassist-zip-override');
+  } catch {
+    return null;
+  }
 }
 
-export const defaultSettings: Settings = {
-  favoriteTeam: '',
-  compact: true,
-  tz: 'America/New_York', // Default timezone
-  hourFormat: '12',
-  hideFinished: true,
-  showLeaguePass: true,
-  showBlackout: true,
-  hiddenNetworks: [],
-  networkColorMode: 'brand',
-  autoRefreshSec: 60,
-};
+/**
+ * Set ZIP code override in localStorage
+ */
+export function setZipOverride(zip: string): void {
+  if (typeof window === 'undefined') return;
+  
+  try {
+    localStorage.setItem('screenassist-zip-override', zip);
+  } catch {
+    // Ignore localStorage errors
+  }
+}
 
-export const useSettingsStore = create<Settings & {
-  setFavoriteTeam: (team: string) => void;
-  setCompact: (compact: boolean) => void;
-  setTz: (tz: string) => void;
-  setHourFormat: (hourFormat: '12' | '24') => void;
-  setHideFinished: (hideFinished: boolean) => void;
-  setShowLeaguePass: (showLeaguePass: boolean) => void;
-  setShowBlackout: (showBlackout: boolean) => void;
-  setHiddenNetworks: (hiddenNetworks: string[]) => void;
-  setNetworkColorMode: (networkColorMode: 'brand' | 'mono') => void;
-  setAutoRefreshSec: (autoRefreshSec: number) => void;
-  updateSettings: (updates: Partial<Settings>) => void;
-  resetSettings: () => void;
-}>()(
-  persist(
-    (set) => ({
-      ...defaultSettings,
-      setFavoriteTeam: (team: string) => set({ favoriteTeam: team }),
-      setCompact: (compact: boolean) => set({ compact }),
-      setTz: (tz: string) => set({ tz }),
-      setHourFormat: (hourFormat: '12' | '24') => set({ hourFormat }),
-      setHideFinished: (hideFinished: boolean) => set({ hideFinished }),
-      setShowLeaguePass: (showLeaguePass: boolean) => set({ showLeaguePass }),
-      setShowBlackout: (showBlackout: boolean) => set({ showBlackout }),
-      setHiddenNetworks: (hiddenNetworks: string[]) => set({ hiddenNetworks }),
-      setNetworkColorMode: (networkColorMode: 'brand' | 'mono') => set({ networkColorMode }),
-      setAutoRefreshSec: (autoRefreshSec: number) => set({ autoRefreshSec }),
-      updateSettings: (updates: Partial<Settings>) => set(updates),
-      resetSettings: () => set(defaultSettings),
-    }),
-    {
-      name: 'screenassist-settings',
-      skipHydration: true, // Prevent hydration mismatch
-      // Remove expiration - persist indefinitely with manual reset option
-    }
-  )
-);
+/**
+ * Clear ZIP code override
+ */
+export function clearZipOverride(): void {
+  if (typeof window === 'undefined') return;
+  
+  try {
+    localStorage.removeItem('screenassist-zip-override');
+  } catch {
+    // Ignore localStorage errors
+  }
+}

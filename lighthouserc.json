@@ -1,0 +1,16 @@
+{
+  "ci": {
+    "collect": {
+      "numberOfRuns": 3
+    },
+    "assert": {
+      "assertions": {
+        "first-contentful-paint": ["error", {"maxNumericValue": 800}],
+        "largest-contentful-paint": ["error", {"maxNumericValue": 1200}],
+        "cumulative-layout-shift": ["error", {"maxNumericValue": 0.05}],
+        "total-blocking-time": ["error", {"maxNumericValue": 150}],
+        "speed-index": ["error", {"maxNumericValue": 1500}]
+      }
+    }
+  }
+}
