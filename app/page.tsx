@@ -4,7 +4,9 @@ import Link from 'next/link';
 import { absoluteUrl } from '@/lib/absolute-url';
 import { useSettingsStore } from '@/lib/settings';
 import { syncURLWithSettings, updateURL } from '@/lib/url-params';
+import { getTimezoneAbbreviation } from '@/lib/timezone';
 import GameCard from '@/components/GameCard';
+import QuickFilters from '@/components/QuickFilters';
 import { NormalizedGame } from '@/app/api/scoreboard/route';
 import { useEffect, useState } from 'react';
 
@@ -34,6 +36,7 @@ export default function Home() {
   const settings = useSettingsStore();
   const [result, setResult] = useState<{ games: NormalizedGame[]; error?: string } | null>(null);
   const [loading, setLoading] = useState(true);
+  const [displayGames, setDisplayGames] = useState<NormalizedGame[]>([]);
 
   // Sync URL parameters with settings on mount
   useEffect(() => {
@@ -120,13 +123,39 @@ export default function Home() {
     );
   }
   
-  // Filter games based on settings
-  const filteredGames = result.games.filter(game => {
-    if (settings.hideFinished && game.flags.isFinished) {
-      return false;
+  // Apply persistent filters and update display games
+  useEffect(() => {
+    if (!result?.games) return;
+    
+    let filteredGames = result.games.filter(game => {
+      if (settings.hideFinished && game.flags.isFinished) {
+        return false;
+      }
+      return true;
+    });
+    
+    // Apply persistent filters
+    if (settings.leaguePassOnly) {
+      filteredGames = filteredGames.filter(game => game.flags.isLeaguePass);
     }
-    return true;
-  });
+    
+    if (settings.nationalGamesOnly) {
+      const nationalNetworks = ['ESPN', 'ABC', 'TNT', 'NBA TV', 'TruTV'];
+      filteredGames = filteredGames.filter(game => 
+        game.broadcasts.some(broadcast => 
+          nationalNetworks.some(national => broadcast.includes(national))
+        )
+      );
+    }
+    
+    if (settings.myTeamOnly && settings.favoriteTeam) {
+      filteredGames = filteredGames.filter(game => 
+        game.awayAbbr === settings.favoriteTeam || game.homeAbbr === settings.favoriteTeam
+      );
+    }
+    
+    setDisplayGames(filteredGames);
+  }, [result, settings]);
 
   return (
     <div className="p-4">
@@ -134,8 +163,16 @@ export default function Home() {
         NBA Games Today
       </h1>
       
-      {/* Spoiler protection toggle */}
-      <div className="flex justify-end mb-3">
+      {/* Timezone indicator */}
+      <div className="flex justify-between items-center mb-3">
+        <div className="text-sm text-gray-600">
+          All times shown in <span className="font-medium">{getTimezoneAbbreviation(settings.tz)}</span>
+          <Link href="/settings" className="ml-1 text-blue-600 hover:text-blue-800 underline">
+            (change)
+          </Link>
+        </div>
+        
+        {/* Spoiler protection toggle */}
         <button 
           onClick={() => settings.setNoSpoilers(!settings.noSpoilers)}
           className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
@@ -148,13 +185,19 @@ export default function Home() {
         </button>
       </div>
       
-      {filteredGames.length === 0 ? (
+      <QuickFilters 
+        games={result?.games || []}
+        onFilteredGamesChange={setDisplayGames}
+        favoriteTeam={settings.favoriteTeam}
+      />
+      
+      {displayGames.length === 0 ? (
         <div className="text-center py-8 text-gray-500">
           <p className="text-lg">No games today</p>
         </div>
       ) : (
         <div className="space-y-3">
-          {filteredGames.map((game) => (
+          {displayGames.map((game) => (
             <GameCard
               key={game.id}
               game={game}

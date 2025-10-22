@@ -84,7 +84,8 @@ export function getTimezoneWithFallback(preferredTz?: string): string {
 export function formatGameTime(
   isoString: string, 
   tz: string, 
-  hour12: boolean
+  hour12: boolean,
+  includeTimezone: boolean = true
 ): string {
   try {
     // Validate input
@@ -113,7 +114,15 @@ export function formatGameTime(
       hour12,
     };
     
-    return date.toLocaleTimeString('en-US', options);
+    const timeString = date.toLocaleTimeString('en-US', options);
+    
+    // Add timezone abbreviation if requested
+    if (includeTimezone) {
+      const tzAbbr = getTimezoneAbbreviation(validTz);
+      return `${timeString} ${tzAbbr}`;
+    }
+    
+    return timeString;
     
   } catch (error) {
     console.warn('Error formatting game time:', error, {
@@ -126,11 +135,18 @@ export function formatGameTime(
     try {
       const date = new Date(isoString);
       if (!isNaN(date.getTime())) {
-        return date.toLocaleTimeString('en-US', {
+        const timeString = date.toLocaleTimeString('en-US', {
           hour: 'numeric',
           minute: '2-digit',
           hour12,
         });
+        
+        if (includeTimezone) {
+          const tzAbbr = getTimezoneAbbreviation(tz);
+          return `${timeString} ${tzAbbr}`;
+        }
+        
+        return timeString;
       }
     } catch {
       // Ignore secondary error
@@ -184,6 +200,26 @@ export function isDST(tz: string = getBrowserTimezone()): boolean {
   } catch {
     return false;
   }
+}
+
+/**
+ * Get timezone abbreviation for inline display
+ */
+export function getTimezoneAbbreviation(tz: string): string {
+  const abbreviations: Record<string, string> = {
+    'America/New_York': 'ET',
+    'America/Chicago': 'CT', 
+    'America/Denver': 'MT',
+    'America/Los_Angeles': 'PT',
+    'America/Anchorage': 'AT',
+    'Pacific/Honolulu': 'HT',
+    'Europe/London': 'GMT',
+    'Europe/Paris': 'CET',
+    'Asia/Tokyo': 'JST',
+    'Australia/Sydney': 'AEST',
+  };
+  
+  return abbreviations[tz] || tz.split('/').pop()?.substring(0, 2).toUpperCase() || 'UTC';
 }
 
 /**

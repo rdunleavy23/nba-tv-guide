@@ -6,9 +6,10 @@ interface DateScrollerProps {
   selectedDate: string;
   onDateSelect: (date: string) => void;
   gameCounts?: Record<string, number>;
+  liveGameCounts?: Record<string, number>;
 }
 
-export default function DateScroller({ selectedDate, onDateSelect, gameCounts }: DateScrollerProps) {
+export default function DateScroller({ selectedDate, onDateSelect, gameCounts, liveGameCounts }: DateScrollerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const generateDates = () => {
     const dates = [];
@@ -75,6 +76,8 @@ export default function DateScroller({ selectedDate, onDateSelect, gameCounts }:
         const isSelected = dateKey === selectedDate;
         
         const gameCount = gameCounts?.[dateKey] || 0;
+        const liveCount = liveGameCounts?.[dateKey] || 0;
+        const isToday = dateKey === selectedDate && date.toDateString() === new Date().toDateString();
         
         return (
           <button
@@ -83,7 +86,9 @@ export default function DateScroller({ selectedDate, onDateSelect, gameCounts }:
             onKeyDown={(e) => handleKeyDown(e, index)}
             className={`whitespace-nowrap px-3 py-2 rounded-full text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 ${
               isSelected
-                ? 'bg-red-600 text-white'
+                ? isToday && liveCount > 0
+                  ? 'bg-red-700 text-white font-bold'
+                  : 'bg-red-600 text-white'
                 : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
             }`}
             role="tab"
@@ -92,10 +97,20 @@ export default function DateScroller({ selectedDate, onDateSelect, gameCounts }:
             tabIndex={isSelected ? 0 : -1}
           >
             <div className="text-center">
-              <div>{formatDate(date)}</div>
+              <div className="flex items-center justify-center gap-1">
+                <span>{formatDate(date)}</span>
+                {liveCount > 0 && (
+                  <span className="bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full animate-pulse">
+                    LIVE
+                  </span>
+                )}
+              </div>
               {gameCount > 0 && (
                 <div className="text-xs opacity-75 mt-1">
                   {gameCount} game{gameCount !== 1 ? 's' : ''}
+                  {liveCount > 0 && (
+                    <span className="text-red-500 font-medium"> • {liveCount} live</span>
+                  )}
                 </div>
               )}
             </div>
