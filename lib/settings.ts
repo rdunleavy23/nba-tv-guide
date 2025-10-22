@@ -13,11 +13,6 @@ export interface Settings {
   hiddenNetworks: string[];
   networkColorMode: 'brand' | 'mono';
   autoRefreshSec: number;
-  // New filter settings
-  leaguePassOnly: boolean;
-  nationalGamesOnly: boolean;
-  myTeamOnly: boolean;
-  userLocation: { lat: number; lon: number; region: string } | null;
 }
 
 export const defaultSettings: Settings = {
@@ -32,11 +27,6 @@ export const defaultSettings: Settings = {
   hiddenNetworks: [],
   networkColorMode: 'brand',
   autoRefreshSec: 60,
-  // New filter defaults
-  leaguePassOnly: false,
-  nationalGamesOnly: false,
-  myTeamOnly: false,
-  userLocation: null,
 };
 
 export const useSettingsStore = create<Settings & {
@@ -51,11 +41,6 @@ export const useSettingsStore = create<Settings & {
   setHiddenNetworks: (hiddenNetworks: string[]) => void;
   setNetworkColorMode: (networkColorMode: 'brand' | 'mono') => void;
   setAutoRefreshSec: (autoRefreshSec: number) => void;
-  // New filter setters
-  setLeaguePassOnly: (leaguePassOnly: boolean) => void;
-  setNationalGamesOnly: (nationalGamesOnly: boolean) => void;
-  setMyTeamOnly: (myTeamOnly: boolean) => void;
-  setUserLocation: (userLocation: { lat: number; lon: number; region: string } | null) => void;
   updateSettings: (updates: Partial<Settings>) => void;
   resetSettings: () => void;
 }>()(
@@ -73,11 +58,6 @@ export const useSettingsStore = create<Settings & {
       setHiddenNetworks: (hiddenNetworks: string[]) => set({ hiddenNetworks }),
       setNetworkColorMode: (networkColorMode: 'brand' | 'mono') => set({ networkColorMode }),
       setAutoRefreshSec: (autoRefreshSec: number) => set({ autoRefreshSec }),
-      // New filter setters
-      setLeaguePassOnly: (leaguePassOnly: boolean) => set({ leaguePassOnly }),
-      setNationalGamesOnly: (nationalGamesOnly: boolean) => set({ nationalGamesOnly }),
-      setMyTeamOnly: (myTeamOnly: boolean) => set({ myTeamOnly }),
-      setUserLocation: (userLocation: { lat: number; lon: number; region: string } | null) => set({ userLocation }),
       updateSettings: (updates: Partial<Settings>) => set(updates),
       resetSettings: () => set(defaultSettings),
     }),

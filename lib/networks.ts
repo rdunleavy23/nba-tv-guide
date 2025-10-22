@@ -114,57 +114,6 @@ export function getBadgeStyle(name: string, mode: 'brand' | 'mono'): React.CSSPr
 }
 
 /**
- * Get League Pass badge style with color-coded availability
- */
-export function getLeaguePassBadgeStyle(blackoutStatus: BlackoutStatus): React.CSSProperties {
-  switch (blackoutStatus) {
-    case 'available':
-      return {
-        backgroundColor: '#10B981', // green-500
-        color: 'white',
-        border: '1px solid rgba(255,255,255,0.2)',
-      };
-    case 'national-blackout':
-    case 'regional-blackout':
-      return {
-        backgroundColor: '#EF4444', // red-500
-        color: 'white',
-        border: '1px solid rgba(255,255,255,0.2)',
-      };
-    case 'no-lp':
-      return {
-        backgroundColor: '#6B7280', // gray-500
-        color: 'white',
-        border: '1px solid rgba(255,255,255,0.2)',
-      };
-    default:
-      return {
-        backgroundColor: '#6B7280',
-        color: 'white',
-        border: '1px solid rgba(255,255,255,0.2)',
-      };
-  }
-}
-
-/**
- * Get League Pass badge text based on availability status
- */
-export function getLeaguePassBadgeText(blackoutStatus: BlackoutStatus): string {
-  switch (blackoutStatus) {
-    case 'available':
-      return '✓ LP Available';
-    case 'national-blackout':
-      return '⚠ Blacked Out';
-    case 'regional-blackout':
-      return '⚠ Regional Only';
-    case 'no-lp':
-      return 'Local Only';
-    default:
-      return 'League Pass';
-  }
-}
-
-/**
  * Get semantic label for network badge (for screen readers and accessibility)
  */
 export function getNetworkSemanticLabel(network: string): string {
@@ -220,7 +169,7 @@ export function getNetworkPriority(network: string): number {
 }
 
 // Smart badge filtering with 2-badge max rule
-export function filterSmartBadges(networks: string[], showLeaguePass: boolean, isLeaguePassOnly: boolean): string[] {
+export function filterSmartBadges(networks: string[], showLeaguePass: boolean, isLeaguePassOnly: boolean): string[] { // eslint-disable-line @typescript-eslint/no-unused-vars
   const normalized = networks.map(normalizeNetworkName);
   const nationalNetworks = ['ESPN', 'ABC', 'TNT', 'NBA TV', 'TruTV'];
   const rsnKeywords = ['FanDuel', 'MSG', 'Bally', 'YES', 'NBC Sports', 'FOX Sports', 'AT&T SportsNet', 'Spectrum', 'Root Sports'];
@@ -244,8 +193,10 @@ export function filterSmartBadges(networks: string[], showLeaguePass: boolean, i
     }
   }
   
-  // Always show LP badge when available (per new requirement)
-  if (result.length < 2) {
+  // Show LP badge only if:
+  // 1. LP-only game (no other broadcasts), OR
+  // 2. User has enabled "Show League Pass" setting
+  if (result.length < 2 && (isLeaguePassOnly || showLeaguePass)) {
     result.push('League Pass');
   }
   
@@ -255,7 +206,7 @@ export function filterSmartBadges(networks: string[], showLeaguePass: boolean, i
 // Blackout status detection
 export type BlackoutStatus = 'available' | 'national-blackout' | 'regional-blackout' | 'no-lp';
 
-export function getBlackoutStatus(networks: string[], isLeaguePass: boolean, userRegion?: string): BlackoutStatus {
+export function getBlackoutStatus(networks: string[], isLeaguePass: boolean): BlackoutStatus {
   const normalized = networks.map(normalizeNetworkName);
   const nationalNetworks = ['ESPN', 'ABC', 'TNT', 'NBA TV', 'TruTV'];
   const rsnKeywords = ['FanDuel', 'MSG', 'Bally', 'YES', 'NBC Sports', 'FOX Sports', 'AT&T SportsNet', 'Spectrum', 'Root Sports'];
