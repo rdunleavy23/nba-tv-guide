@@ -85,18 +85,6 @@ export default function WeekPage() {
         <h2 className="text-lg font-semibold text-gray-800">
           {formatSelectedDate(selectedDate)}
         </h2>
-        
-        {/* Spoiler protection toggle */}
-        <button 
-          onClick={() => settings.setNoSpoilers(!settings.noSpoilers)}
-          className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
-            settings.noSpoilers 
-              ? 'bg-green-100 text-green-800 border border-green-200' 
-              : 'bg-gray-100 text-gray-600 border border-gray-200'
-          }`}
-        >
-          {settings.noSpoilers ? '🔒 Spoilers OFF' : '🔓 Spoilers ON'}
-        </button>
       </div>
 
       {loading ? (
