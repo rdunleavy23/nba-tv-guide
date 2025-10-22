@@ -2,21 +2,16 @@
 
 import { useSettingsStore } from '@/lib/settings';
 import { getShareableURL } from '@/lib/url-params';
+import { getCommonTimezones, getTimezoneDisplayName, getBrowserTimezone, getTimezoneDebugInfo } from '@/lib/timezone';
 import { useState } from 'react';
 
 export default function SettingsPage() {
   const settings = useSettingsStore();
   const [showShareURL, setShowShareURL] = useState(false);
 
-  const timeZones = [
-    'America/New_York',
-    'America/Chicago', 
-    'America/Denver',
-    'America/Los_Angeles',
-    'America/Phoenix',
-    'America/Anchorage',
-    'Pacific/Honolulu',
-  ];
+  const timeZones = getCommonTimezones();
+  const browserTz = getBrowserTimezone();
+  const debugInfo = getTimezoneDebugInfo(settings.tz);
 
   const teams = [
     { id: 'ATL', name: 'Atlanta Hawks', colors: { primary: '#E03A3E', secondary: '#C1D32F' } },
@@ -79,17 +74,40 @@ export default function SettingsPage() {
           
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Time Zone</label>
-            <select
-              value={settings.tz}
-              onChange={(e) => settings.setTz(e.target.value)}
-              className="w-full rounded border-gray-300 text-sm"
-            >
-              {timeZones.map(tz => (
-                <option key={tz} value={tz}>
-                  {tz.replace('America/', '').replace('Pacific/', '').replace('_', ' ')}
-                </option>
-              ))}
-            </select>
+            <div className="space-y-2">
+              <select
+                value={settings.tz}
+                onChange={(e) => settings.setTz(e.target.value)}
+                className="w-full rounded border-gray-300 text-sm"
+              >
+                {timeZones.map(tz => (
+                  <option key={tz.value} value={tz.value}>
+                    {tz.label}
+                  </option>
+                ))}
+              </select>
+              
+              {/* Timezone Debug Info */}
+              <div className="bg-gray-50 border border-gray-200 rounded-md p-3 text-xs">
+                <div className="space-y-1">
+                  <div><strong>Selected:</strong> {getTimezoneDisplayName(settings.tz)} ({settings.tz})</div>
+                  <div><strong>Browser:</strong> {getTimezoneDisplayName(browserTz)} ({browserTz})</div>
+                  <div><strong>Current Time:</strong> {debugInfo.currentTime}</div>
+                  <div><strong>DST Active:</strong> {debugInfo.isDST ? 'Yes' : 'No'}</div>
+                  <div><strong>Valid:</strong> {debugInfo.isValid ? 'Yes' : 'No'}</div>
+                </div>
+              </div>
+              
+              {/* Reset to Browser Timezone */}
+              {settings.tz !== browserTz && (
+                <button
+                  onClick={() => settings.resetToSystemTimezone()}
+                  className="text-sm text-blue-600 hover:text-blue-800 underline"
+                >
+                  Reset to Browser Timezone ({getTimezoneDisplayName(browserTz)})
+                </button>
+              )}
+            </div>
           </div>
 
           <div className="flex items-center justify-between">

@@ -44,6 +44,7 @@ export const useSettingsStore = create<Settings & {
   setAutoRefreshSec: (autoRefreshSec: number) => void;
   updateSettings: (updates: Partial<Settings>) => void;
   resetSettings: () => void;
+  resetToSystemTimezone: () => void;
 }>()(
   persist(
     (set) => ({
@@ -61,6 +62,7 @@ export const useSettingsStore = create<Settings & {
       setAutoRefreshSec: (autoRefreshSec: number) => set({ autoRefreshSec }),
       updateSettings: (updates: Partial<Settings>) => set(updates),
       resetSettings: () => set(defaultSettings),
+      resetToSystemTimezone: () => set({ tz: getBrowserTimezone() }),
     }),
     {
       name: 'screenassist-settings',

@@ -115,6 +115,23 @@ export async function GET(request: NextRequest) {
         ((awayTeam.team as Record<string, unknown>)?.shortName as string) || 
         awayTeamName.substring(0, 3).toUpperCase() : 'UNK';
       
+      // Validate and process game time
+      const rawTime = event.date as string;
+      let processedTime = rawTime;
+      
+      // Validate ISO timestamp
+      if (!rawTime || typeof rawTime !== 'string') {
+        console.warn('Missing or invalid game time for game:', event.id);
+        processedTime = new Date().toISOString(); // Fallback to current time
+      } else {
+        // Test if it's a valid ISO string
+        const testDate = new Date(rawTime);
+        if (isNaN(testDate.getTime())) {
+          console.warn('Invalid ISO timestamp for game:', event.id, 'Raw time:', rawTime);
+          processedTime = new Date().toISOString(); // Fallback to current time
+        }
+      }
+      
       // Log warnings for unexpected data shapes (not errors)
       if (!homeTeam || !awayTeam) {
         console.warn('Missing team data for game:', event.id);
@@ -126,7 +143,7 @@ export async function GET(request: NextRequest) {
         awayTeam: awayTeamName,
         homeAbbr,
         awayAbbr,
-        time: event.date as string,
+        time: processedTime,
         status: ((competition?.status as Record<string, unknown>)?.type as Record<string, unknown>)?.name as string || event.status as string,
         broadcasts: [...new Set(broadcasts)], // deduplicate
         flags: {

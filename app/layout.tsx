@@ -37,6 +37,10 @@ export default function RootLayout({
                     // Set accent color based on favorite team
                     document.documentElement.style.setProperty('--accent', '#E31837');
                   }
+                  if (parsed.state?.tz) {
+                    // Set timezone data attribute for CSS access if needed
+                    document.documentElement.setAttribute('data-user-tz', parsed.state.tz);
+                  }
                 }
               } catch (e) {
                 // Ignore localStorage errors during SSR

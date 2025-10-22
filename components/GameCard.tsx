@@ -1,6 +1,7 @@
 'use client';
 
 import { getBadgeStyle, sortNetworks, getNetworkSemanticLabel } from '@/lib/networks';
+import { formatGameTime } from '@/lib/timezone';
 import { NormalizedGame } from '@/app/api/scoreboard/route';
 
 interface GameCardProps {
@@ -26,21 +27,6 @@ export default function GameCard({
   hiddenNetworks,
   noSpoilers,
 }: GameCardProps) {
-  const formatTime = (timeString: string) => {
-    try {
-      const date = new Date(timeString);
-      const options: Intl.DateTimeFormatOptions = {
-        timeZone: tz,
-        hour: 'numeric',
-        minute: '2-digit',
-        hour12,
-      };
-      return date.toLocaleTimeString('en-US', options);
-    } catch {
-      return timeString;
-    }
-  };
-
   const filteredBroadcasts = game.broadcasts
     .filter(broadcast => !hiddenNetworks.includes(broadcast))
     .map(broadcast => broadcast);
@@ -88,7 +74,7 @@ export default function GameCard({
           {game.awayAbbr} @ {game.homeAbbr}
         </div>
         <div className="text-gray-600 tabular-nums">
-          {noSpoilers && game.flags.isFinished ? '—' : formatTime(game.time)}
+          {noSpoilers && game.flags.isFinished ? '—' : formatGameTime(game.time, tz, hour12)}
         </div>
       </div>
     </div>
