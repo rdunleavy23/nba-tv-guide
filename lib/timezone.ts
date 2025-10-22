@@ -148,6 +148,27 @@ export function getTimezoneDisplayName(tz: string): string {
 }
 
 /**
+ * Get timezone abbreviation (e.g., "EST", "PST")
+ */
+export function getTimezoneAbbreviation(tz: string): string {
+  try {
+    const now = new Date();
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: tz,
+      timeZoneName: 'short'
+    });
+    
+    const parts = formatter.formatToParts(now);
+    const timeZoneName = parts.find(part => part.type === 'timeZoneName');
+    
+    return timeZoneName?.value || tz.split('/').pop()?.substring(0, 3).toUpperCase() || 'UTC';
+  } catch (error) {
+    console.warn('Error getting timezone abbreviation:', error);
+    return tz.split('/').pop()?.substring(0, 3).toUpperCase() || 'UTC';
+  }
+}
+
+/**
  * Get all common US timezones for settings UI
  */
 export function getCommonTimezones(): Array<{ value: string; label: string }> {
