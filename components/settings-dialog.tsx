@@ -4,73 +4,77 @@ import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Check } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Button } from '@/components/ui/button';
 import { getClientRegionOverride, setClientRegionOverride } from '@/lib/region';
 
-interface SettingsSheetProps {
+interface SettingsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-/**
- * SettingsSheet component - client component for ZIP override
- * Uses shadcn Dialog for production-quality modal
- */
-export function SettingsSheet({ open, onOpenChange }: SettingsSheetProps) {
-  const [zipCode, setZipCode] = useState('');
-  const [saved, setSaved] = useState(false);
+export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
+  const [zip, setZip] = useState('');
+  const [darkMode, setDarkMode] = useState(true);
 
   // Load current ZIP override on mount
   useEffect(() => {
     const currentZip = getClientRegionOverride();
     if (currentZip) {
-      setZipCode(currentZip);
+      setZip(currentZip);
     }
   }, []);
 
   // Handle ZIP code change with auto-save
   const handleZipChange = async (value: string) => {
-    setZipCode(value);
+    setZip(value);
     
     // Validate ZIP code (basic 5-digit check)
     if (value && /^\d{5}$/.test(value)) {
       setClientRegionOverride(value);
-      setSaved(true);
-      setTimeout(() => setSaved(false), 2000);
     } else if (value === '') {
       // Clear override
       setClientRegionOverride('');
-      setSaved(true);
-      setTimeout(() => setSaved(false), 2000);
     }
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-sm">
         <DialogHeader>
           <DialogTitle>Settings</DialogTitle>
         </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="grid gap-2">
+        
+        <div className="space-y-4 py-4">
+          <div className="space-y-2">
             <Label htmlFor="zip">ZIP Code</Label>
-            <div className="flex items-center gap-2">
-              <Input
-                id="zip"
-                type="text"
-                value={zipCode}
-                onChange={(e) => handleZipChange(e.target.value)}
-                placeholder="90210"
-                maxLength={5}
-                className="font-mono"
-                pattern="\d{5}"
-              />
-              {saved && <Check className="h-4 w-4 text-green-500" />}
-            </div>
+            <Input 
+              id="zip" 
+              value={zip}
+              onChange={(e) => handleZipChange(e.target.value)}
+              placeholder="90210"
+              maxLength={5}
+              className="font-mono"
+            />
             <p className="text-xs text-muted-foreground">
               For accurate blackout detection
             </p>
           </div>
+          
+          <div className="flex items-center justify-between">
+            <Label htmlFor="theme">Dark Mode</Label>
+            <Switch 
+              id="theme"
+              checked={darkMode}
+              onCheckedChange={setDarkMode}
+            />
+          </div>
+        </div>
+        
+        <div className="flex justify-end">
+          <Button onClick={() => onOpenChange(false)}>
+            Done
+          </Button>
         </div>
       </DialogContent>
     </Dialog>
