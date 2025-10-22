@@ -4,32 +4,14 @@ import { AnswerChip, type Game } from '@/components/answer-chip';
 import { SkeletonList } from '@/components/game-skeleton';
 import { ClientWrapper } from '@/components/client-wrapper';
 import { Logo } from '@/components/logo';
-import { DayNavigator } from '@/components/day-navigator';
+import { DayNavigatorWrapper } from '@/components/day-navigator-wrapper';
+import { SettingsTrigger } from '@/components/settings-trigger';
 import { getServerRegion } from '@/lib/region';
 import { formatGameTime, isGameTonight } from '@/lib/timezone';
 import { Region } from '@/lib/region';
 import { filterToNationalOnly } from '@/lib/national';
 
 export const runtime = 'edge';
-
-// Client component for settings trigger
-function SettingsTrigger() {
-  return (
-    <button
-      onClick={() => {
-        // This will be handled by ClientWrapper's keyboard listener
-        const event = new KeyboardEvent('keydown', {
-          key: ',',
-          metaKey: true,
-        });
-        window.dispatchEvent(event);
-      }}
-      className="text-xs text-muted-foreground hover:text-foreground"
-    >
-      Settings
-    </button>
-  );
-}
 
 // Game row component - clickable to ESPN
 function GameRow({ game, region }: { game: Game; region: Region | null }) {
@@ -203,13 +185,7 @@ export default async function HomePage() {
         <header className="py-4 border-b">
           <div className="flex items-center justify-between">
             <Logo />
-            <DayNavigator 
-              currentDate={new Date()} 
-              onDateChange={(date) => {
-                // TODO: Implement date change logic
-                console.log('Date changed to:', date);
-              }} 
-            />
+            <DayNavigatorWrapper />
           </div>
         </header>
 
