@@ -1,6 +1,6 @@
 'use client';
 
-import { getBadgeStyle, filterSmartBadges, getBlackoutStatus, getNetworkSemanticLabel, getLeaguePassBadgeStyle, getLeaguePassBadgeText } from '@/lib/networks';
+import { getBadgeStyle, filterSmartBadges, getBlackoutStatus, getNetworkSemanticLabel } from '@/lib/networks';
 import { formatGameTime } from '@/lib/timezone';
 import { NormalizedGame } from '@/app/api/scoreboard/route';
 
