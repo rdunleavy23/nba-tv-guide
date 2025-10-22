@@ -101,7 +101,7 @@ export default function SettingsPage() {
               {/* Reset to Browser Timezone */}
               {settings.tz !== browserTz && (
                 <button
-                  onClick={() => settings.resetToSystemTimezone()}
+                  onClick={() => settings.setTz(browserTz)}
                   className="text-sm text-blue-600 hover:text-blue-800 underline"
                 >
                   Reset to Browser Timezone ({getTimezoneDisplayName(browserTz)})

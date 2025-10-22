@@ -55,7 +55,7 @@ function sendToAnalytics(metric: WebVitalMetric): void {
 /**
  * Handle Core Web Vitals metrics
  */
-function handleWebVital(metric: WebVitalMetric): void {
+export function handleWebVital(metric: WebVitalMetric): void {
   const threshold = VITALS_THRESHOLDS[metric.name as keyof typeof VITALS_THRESHOLDS];
   
   if (threshold && metric.value > threshold) {

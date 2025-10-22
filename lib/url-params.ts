@@ -130,7 +130,7 @@ export function syncURLWithSettings(
   
   Object.entries(urlSettings).forEach(([key, value]) => {
     if (value !== undefined && settings[key as keyof Settings] !== value) {
-      updates[key as keyof Settings] = value;
+      (updates as Record<string, unknown>)[key] = value;
     }
   });
 
