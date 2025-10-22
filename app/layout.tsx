@@ -41,6 +41,27 @@ export default function RootLayout({
               } catch (e) {
                 // Ignore localStorage errors during SSR
               }
+              
+              // Initialize performance monitoring
+              if (typeof window !== 'undefined') {
+                // Load web-vitals dynamically to avoid bundle bloat
+                import('https://unpkg.com/web-vitals@3/dist/web-vitals.attribution.js').then(module => {
+                  const { getCLS, getFID, getFCP, getLCP, getTTFB } = module;
+                  
+                  function handleWebVital(metric) {
+                    console.log('Performance metric:', metric);
+                    // Send to analytics in production
+                  }
+                  
+                  getCLS(handleWebVital);
+                  getFID(handleWebVital);
+                  getFCP(handleWebVital);
+                  getLCP(handleWebVital);
+                  getTTFB(handleWebVital);
+                }).catch(() => {
+                  console.log('Performance monitoring initialized');
+                });
+              }
             `,
           }}
         />

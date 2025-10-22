@@ -1,8 +1,12 @@
+'use client';
+
 import Link from 'next/link';
 import { absoluteUrl } from '@/lib/absolute-url';
-import { defaultSettings } from '@/lib/settings';
+import { useSettingsStore } from '@/lib/settings';
+import { syncURLWithSettings, updateURL } from '@/lib/url-params';
 import GameCard from '@/components/GameCard';
 import { NormalizedGame } from '@/app/api/scoreboard/route';
+import { useEffect, useState } from 'react';
 
 async function getTodaysGames(): Promise<{ games: NormalizedGame[]; error?: string }> {
   try {
@@ -26,8 +30,62 @@ async function getTodaysGames(): Promise<{ games: NormalizedGame[]; error?: stri
   }
 }
 
-export default async function Home() {
-  const result = await getTodaysGames();
+export default function Home() {
+  const settings = useSettingsStore();
+  const [result, setResult] = useState<{ games: NormalizedGame[]; error?: string } | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  // Sync URL parameters with settings on mount
+  useEffect(() => {
+    syncURLWithSettings(settings, settings.updateSettings);
+  }, []);
+
+  // Update URL when settings change
+  useEffect(() => {
+    updateURL(settings);
+  }, [settings]);
+
+  // Fetch games data
+  useEffect(() => {
+    async function fetchGames() {
+      try {
+        const data = await getTodaysGames();
+        setResult(data);
+      } catch (error) {
+        setResult({ games: [], error: 'Failed to load games' });
+      } finally {
+        setLoading(false);
+      }
+    }
+    
+    fetchGames();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="p-4">
+        <h1 className="text-2xl font-bold mb-6 text-gray-900">
+          NBA Games Today
+        </h1>
+        <div className="text-center py-8 text-gray-500">
+          <p className="text-lg">Loading games...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!result) {
+    return (
+      <div className="p-4">
+        <h1 className="text-2xl font-bold mb-6 text-gray-900">
+          NBA Games Today
+        </h1>
+        <div className="text-center py-8 text-gray-500">
+          <p className="text-lg">No data available</p>
+        </div>
+      </div>
+    );
+  }
   
   // Handle error state
   if (result.error) {
@@ -62,9 +120,9 @@ export default async function Home() {
     );
   }
   
-  // Filter games based on default settings
+  // Filter games based on settings
   const filteredGames = result.games.filter(game => {
-    if (defaultSettings.hideFinished && game.flags.isFinished) {
+    if (settings.hideFinished && game.flags.isFinished) {
       return false;
     }
     return true;
@@ -86,14 +144,14 @@ export default async function Home() {
             <GameCard
               key={game.id}
               game={game}
-              tz={defaultSettings.tz}
-              hour12={defaultSettings.hourFormat === '12'}
-              compact={defaultSettings.compact}
-              showLeaguePass={defaultSettings.showLeaguePass}
-              showBlackout={defaultSettings.showBlackout}
-              networkColorMode={defaultSettings.networkColorMode}
-              hiddenNetworks={defaultSettings.hiddenNetworks}
-              noSpoilers={defaultSettings.noSpoilers}
+              tz={settings.tz}
+              hour12={settings.hourFormat === '12'}
+              compact={settings.compact}
+              showLeaguePass={settings.showLeaguePass}
+              showBlackout={settings.showBlackout}
+              networkColorMode={settings.networkColorMode}
+              hiddenNetworks={settings.hiddenNetworks}
+              noSpoilers={settings.noSpoilers}
             />
           ))}
         </div>

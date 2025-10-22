@@ -1,6 +1,6 @@
 'use client';
 
-import { getBadgeStyle, sortNetworks } from '@/lib/networks';
+import { getBadgeStyle, sortNetworks, getNetworkSemanticLabel } from '@/lib/networks';
 import { NormalizedGame } from '@/app/api/scoreboard/route';
 
 interface GameCardProps {
@@ -47,29 +47,21 @@ export default function GameCard({
 
   const sortedBroadcasts = sortNetworks(filteredBroadcasts);
 
-  const paddingClass = compact ? 'p-2' : 'p-3';
+  const paddingClass = compact ? 'p-3' : 'p-4';
   const textSizeClass = compact ? 'text-sm' : 'text-base';
-  const badgeSizeClass = compact ? 'text-xs px-2 py-1' : 'text-sm px-2 py-1';
+  const badgeSizeClass = compact ? 'text-sm px-2 py-1' : 'text-lg px-3 py-1.5';
 
   return (
     <div className={`bg-white rounded-lg border border-gray-200 ${paddingClass} mb-2`}>
-      {/* Game info row */}
-      <div className={`flex justify-between items-center mb-2 ${textSizeClass}`}>
-        <div className="font-medium">
-          {game.awayAbbr} @ {game.homeAbbr}
-        </div>
-        <div className="text-gray-600 tabular-nums">
-          {noSpoilers && game.flags.isFinished ? 'Final' : formatTime(game.time)}
-        </div>
-      </div>
-
-      {/* Channel badges row */}
-      <div className="inline-flex flex-wrap gap-1 min-h-[2rem]">
+      {/* Channel badges row - positioned first for Principle 1 */}
+      <div className="inline-flex flex-wrap gap-1 min-h-[2rem] mb-2">
         {sortedBroadcasts.map((network, index) => (
           <span
             key={index}
             className={`rounded-full ${badgeSizeClass} font-medium break-words`}
             style={getBadgeStyle(network, networkColorMode)}
+            role="img"
+            aria-label={getNetworkSemanticLabel(network)}
           >
             {network}
           </span>
@@ -88,6 +80,16 @@ export default function GameCard({
             Blackout risk
           </span>
         )}
+      </div>
+
+      {/* Game info row */}
+      <div className={`flex justify-between items-center ${textSizeClass}`}>
+        <div className="font-medium">
+          {game.awayAbbr} @ {game.homeAbbr}
+        </div>
+        <div className="text-gray-600 tabular-nums">
+          {noSpoilers && game.flags.isFinished ? '—' : formatTime(game.time)}
+        </div>
       </div>
     </div>
   );

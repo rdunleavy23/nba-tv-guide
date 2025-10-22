@@ -1,9 +1,12 @@
 'use client';
 
 import { useSettingsStore } from '@/lib/settings';
+import { getShareableURL } from '@/lib/url-params';
+import { useState } from 'react';
 
 export default function SettingsPage() {
   const settings = useSettingsStore();
+  const [showShareURL, setShowShareURL] = useState(false);
 
   const timeZones = [
     'America/New_York',
@@ -180,6 +183,47 @@ export default function SettingsPage() {
               onChange={(e) => settings.setAutoRefreshSec(Number(e.target.value))}
               className="w-full rounded border-gray-300 text-sm"
             />
+          </div>
+        </fieldset>
+
+        {/* Share & Reset */}
+        <fieldset className="space-y-4">
+          <legend className="text-lg font-semibold text-gray-800">Share & Reset</legend>
+          
+          <div className="space-y-3">
+            <button
+              onClick={() => setShowShareURL(!showShareURL)}
+              className="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 text-sm font-medium"
+            >
+              {showShareURL ? 'Hide' : 'Show'} Shareable URL
+            </button>
+            
+            {showShareURL && (
+              <div className="bg-gray-50 border border-gray-200 rounded-md p-3">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Shareable URL</label>
+                <input
+                  type="text"
+                  value={getShareableURL(settings)}
+                  readOnly
+                  className="w-full rounded border-gray-300 text-sm bg-white"
+                  onClick={(e) => (e.target as HTMLInputElement).select()}
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Click to select and copy. Share this URL to preserve your settings.
+                </p>
+              </div>
+            )}
+            
+            <button
+              onClick={() => {
+                if (confirm('Reset all settings to defaults? This cannot be undone.')) {
+                  settings.resetSettings();
+                }
+              }}
+              className="w-full bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 text-sm font-medium"
+            >
+              Reset All Settings
+            </button>
           </div>
         </fieldset>
       </div>

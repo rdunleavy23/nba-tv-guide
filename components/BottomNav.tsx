@@ -23,7 +23,7 @@ export default function BottomNav() {
             <Link
               key={item.href}
               href={item.href}
-              className={`flex flex-col items-center py-2 px-3 text-xs font-medium transition-colors ${
+              className={`flex flex-col items-center py-3 px-4 text-xs font-medium transition-colors min-h-[48px] min-w-[48px] justify-center ${
                 isActive
                   ? 'text-[var(--accent)]'
                   : 'text-gray-500 hover:text-gray-700'
