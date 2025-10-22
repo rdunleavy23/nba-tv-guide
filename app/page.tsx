@@ -134,6 +134,20 @@ export default function Home() {
         NBA Games Today
       </h1>
       
+      {/* Spoiler protection toggle */}
+      <div className="flex justify-end mb-3">
+        <button 
+          onClick={() => settings.setNoSpoilers(!settings.noSpoilers)}
+          className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+            settings.noSpoilers 
+              ? 'bg-green-100 text-green-800 border border-green-200' 
+              : 'bg-gray-100 text-gray-600 border border-gray-200'
+          }`}
+        >
+          {settings.noSpoilers ? '🔒 Spoilers OFF' : '🔓 Spoilers ON'}
+        </button>
+      </div>
+      
       {filteredGames.length === 0 ? (
         <div className="text-center py-8 text-gray-500">
           <p className="text-lg">No games today</p>

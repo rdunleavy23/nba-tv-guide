@@ -149,6 +149,86 @@ export function filterNationalAndStreaming(networks: string[]): string[] {
   );
 }
 
+// Network priority system for smart badge filtering
+export function getNetworkPriority(network: string): number {
+  const normalizedName = normalizeNetworkName(network);
+  
+  // Priority 1: National networks (always accessible)
+  const nationalNetworks = ['ESPN', 'ABC', 'TNT', 'NBA TV', 'TruTV'];
+  if (nationalNetworks.includes(normalizedName)) return 1;
+  
+  // Priority 2: Regional Sports Networks (RSNs)
+  const rsnKeywords = ['FanDuel', 'MSG', 'Bally', 'YES', 'NBC Sports', 'FOX Sports', 'AT&T SportsNet', 'Spectrum', 'Root Sports'];
+  if (rsnKeywords.some(keyword => normalizedName.includes(keyword))) return 2;
+  
+  // Priority 3: League Pass (tertiary)
+  if (normalizedName.includes('League Pass')) return 3;
+  
+  // Priority 4: Other networks
+  return 4;
+}
+
+// Smart badge filtering with 2-badge max rule
+export function filterSmartBadges(networks: string[], showLeaguePass: boolean, isLeaguePassOnly: boolean): string[] {
+  const normalized = networks.map(normalizeNetworkName);
+  const nationalNetworks = ['ESPN', 'ABC', 'TNT', 'NBA TV', 'TruTV'];
+  const rsnKeywords = ['FanDuel', 'MSG', 'Bally', 'YES', 'NBC Sports', 'FOX Sports', 'AT&T SportsNet', 'Spectrum', 'Root Sports'];
+  
+  // Sort by priority
+  const sorted = normalized.sort((a, b) => getNetworkPriority(a) - getNetworkPriority(b));
+  
+  const result: string[] = [];
+  
+  // Always show national TV first if available
+  const national = sorted.find(network => nationalNetworks.includes(network));
+  if (national) {
+    result.push(national);
+  }
+  
+  // Show RSN second if we have space and no national
+  if (result.length < 2) {
+    const rsn = sorted.find(network => rsnKeywords.some(keyword => network.includes(keyword)));
+    if (rsn) {
+      result.push(rsn);
+    }
+  }
+  
+  // Show LP badge only if:
+  // 1. LP-only game (no other broadcasts), OR
+  // 2. User has enabled "Show League Pass" setting
+  if (result.length < 2 && (isLeaguePassOnly || showLeaguePass)) {
+    result.push('League Pass');
+  }
+  
+  return result.slice(0, 2); // Cap at 2 badges max
+}
+
+// Blackout status detection
+export type BlackoutStatus = 'available' | 'national-blackout' | 'regional-blackout' | 'no-lp';
+
+export function getBlackoutStatus(networks: string[], isLeaguePass: boolean): BlackoutStatus {
+  const normalized = networks.map(normalizeNetworkName);
+  const nationalNetworks = ['ESPN', 'ABC', 'TNT', 'NBA TV', 'TruTV'];
+  const rsnKeywords = ['FanDuel', 'MSG', 'Bally', 'YES', 'NBC Sports', 'FOX Sports', 'AT&T SportsNet', 'Spectrum', 'Root Sports'];
+  
+  const hasNational = normalized.some(network => nationalNetworks.includes(network));
+  const hasRSN = normalized.some(network => rsnKeywords.some(keyword => network.includes(keyword)));
+  
+  if (!isLeaguePass) {
+    return 'no-lp';
+  }
+  
+  if (hasNational) {
+    return 'national-blackout';
+  }
+  
+  if (hasRSN) {
+    return 'regional-blackout';
+  }
+  
+  return 'available';
+}
+
 export function sortNetworks(networks: string[]): string[] {
   // Only nationals and streamers - RSNs filtered out
   const nationalNetworks = ['ESPN', 'ABC', 'TNT', 'NBA TV', 'TruTV'];

@@ -5,9 +5,10 @@ import { useRef } from 'react';
 interface DateScrollerProps {
   selectedDate: string;
   onDateSelect: (date: string) => void;
+  gameCounts?: Record<string, number>;
 }
 
-export default function DateScroller({ selectedDate, onDateSelect }: DateScrollerProps) {
+export default function DateScroller({ selectedDate, onDateSelect, gameCounts }: DateScrollerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const generateDates = () => {
     const dates = [];
@@ -73,22 +74,31 @@ export default function DateScroller({ selectedDate, onDateSelect }: DateScrolle
         const dateKey = formatDateKey(date);
         const isSelected = dateKey === selectedDate;
         
+        const gameCount = gameCounts?.[dateKey] || 0;
+        
         return (
           <button
             key={dateKey}
             onClick={() => onDateSelect(dateKey)}
             onKeyDown={(e) => handleKeyDown(e, index)}
-            className={`whitespace-nowrap px-3 py-2 rounded-full text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-offset-2 ${
+            className={`whitespace-nowrap px-3 py-2 rounded-full text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 ${
               isSelected
-                ? 'bg-[var(--accent)] text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                ? 'bg-red-600 text-white'
+                : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
             }`}
             role="tab"
             aria-selected={isSelected}
             aria-controls={`date-${dateKey}`}
             tabIndex={isSelected ? 0 : -1}
           >
-            {formatDate(date)}
+            <div className="text-center">
+              <div>{formatDate(date)}</div>
+              {gameCount > 0 && (
+                <div className="text-xs opacity-75 mt-1">
+                  {gameCount} game{gameCount !== 1 ? 's' : ''}
+                </div>
+              )}
+            </div>
           </button>
         );
       })}

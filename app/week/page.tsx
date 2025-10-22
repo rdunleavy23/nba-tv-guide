@@ -9,6 +9,7 @@ import { NormalizedGame } from '@/app/api/scoreboard/route';
 export default function WeekPage() {
   const [games, setGames] = useState<NormalizedGame[]>([]);
   const [loading, setLoading] = useState(false);
+  const [gameCounts, setGameCounts] = useState<Record<string, number>>({});
   const [selectedDate, setSelectedDate] = useState(() => {
     const today = new Date();
     return today.toISOString().split('T')[0].replace(/-/g, '');
@@ -25,6 +26,12 @@ export default function WeekPage() {
       }
       const data = await response.json();
       setGames(data.games || []);
+      
+      // Update game counts
+      setGameCounts(prev => ({
+        ...prev,
+        [date]: data.gameCount || 0
+      }));
     } catch (error) {
       console.error('Error fetching games:', error);
       setGames([]);
@@ -70,13 +77,26 @@ export default function WeekPage() {
       
       <DateScroller 
         selectedDate={selectedDate} 
-        onDateSelect={handleDateSelect} 
+        onDateSelect={handleDateSelect}
+        gameCounts={gameCounts}
       />
       
-      <div className="mb-4">
+      <div className="mb-4 flex justify-between items-center">
         <h2 className="text-lg font-semibold text-gray-800">
           {formatSelectedDate(selectedDate)}
         </h2>
+        
+        {/* Spoiler protection toggle */}
+        <button 
+          onClick={() => settings.setNoSpoilers(!settings.noSpoilers)}
+          className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+            settings.noSpoilers 
+              ? 'bg-green-100 text-green-800 border border-green-200' 
+              : 'bg-gray-100 text-gray-600 border border-gray-200'
+          }`}
+        >
+          {settings.noSpoilers ? '🔒 Spoilers OFF' : '🔓 Spoilers ON'}
+        </button>
       </div>
 
       {loading ? (

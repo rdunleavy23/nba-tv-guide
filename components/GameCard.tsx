@@ -1,6 +1,6 @@
 'use client';
 
-import { getBadgeStyle, sortNetworks, getNetworkSemanticLabel } from '@/lib/networks';
+import { getBadgeStyle, filterSmartBadges, getBlackoutStatus, getNetworkSemanticLabel } from '@/lib/networks';
 import { formatGameTime } from '@/lib/timezone';
 import { NormalizedGame } from '@/app/api/scoreboard/route';
 
@@ -31,50 +31,70 @@ export default function GameCard({
     .filter(broadcast => !hiddenNetworks.includes(broadcast))
     .map(broadcast => broadcast);
 
-  const sortedBroadcasts = sortNetworks(filteredBroadcasts);
+  // Use smart badge filtering with 2-badge max
+  const isLeaguePassOnly = game.flags.isLeaguePass && filteredBroadcasts.length === 0;
+  const smartBadges = filterSmartBadges(filteredBroadcasts, showLeaguePass, isLeaguePassOnly);
+  
+  // Get blackout status for warnings
+  const blackoutStatus = getBlackoutStatus(filteredBroadcasts, game.flags.isLeaguePass);
 
   const paddingClass = compact ? 'p-3' : 'p-4';
   const textSizeClass = compact ? 'text-sm' : 'text-base';
-  const badgeSizeClass = compact ? 'text-sm px-2 py-1' : 'text-lg px-3 py-1.5';
+  const timeSizeClass = compact ? 'text-sm' : 'text-base';
+  const matchupSizeClass = compact ? 'text-sm' : 'text-sm';
 
   return (
     <div className={`bg-white rounded-lg border border-gray-200 ${paddingClass} mb-2`}>
-      {/* Channel badges row - positioned first for Principle 1 */}
-      <div className="inline-flex flex-wrap gap-1 min-h-[2rem] mb-2">
-        {sortedBroadcasts.map((network, index) => (
-          <span
-            key={index}
-            className={`rounded-full ${badgeSizeClass} font-medium break-words`}
-            style={getBadgeStyle(network, networkColorMode)}
-            role="img"
-            aria-label={getNetworkSemanticLabel(network)}
-          >
-            {network}
-          </span>
-        ))}
+      {/* Horizontal layout: Time | Matchup | Smart Badges */}
+      <div className={`flex items-center justify-between gap-3 ${textSizeClass}`}>
+        {/* Time - Left side */}
+        <div className={`font-bold ${timeSizeClass} text-gray-900 tabular-nums flex-shrink-0`}>
+          {noSpoilers && game.flags.isFinished ? '—' : formatGameTime(game.time, tz, hour12)}
+        </div>
         
-        {showLeaguePass && game.flags.isLeaguePass && (
-          <span className={`rounded-full border border-gray-400 text-gray-700 ${badgeSizeClass}`}>
-            League Pass
-          </span>
-        )}
-        
-        {showBlackout && game.flags.isLeaguePass && sortedBroadcasts.some(network => 
-          !['ESPN', 'ABC', 'TNT', 'NBA TV', 'Peacock', 'Prime Video', 'NBC Sports', 'FOX Sports'].includes(network)
-        ) && (
-          <span className={`rounded-full border border-orange-400 text-orange-700 ${badgeSizeClass}`}>
-            Blackout risk
-          </span>
-        )}
-      </div>
-
-      {/* Game info row */}
-      <div className={`flex justify-between items-center ${textSizeClass}`}>
-        <div className="font-medium">
+        {/* Matchup - Center */}
+        <div className={`font-medium ${matchupSizeClass} text-gray-800 flex-shrink-0`}>
           {game.awayAbbr} @ {game.homeAbbr}
         </div>
-        <div className="text-gray-600 tabular-nums">
-          {noSpoilers && game.flags.isFinished ? '—' : formatGameTime(game.time, tz, hour12)}
+        
+        {/* Smart Badges - Right side */}
+        <div className="flex items-center gap-1 flex-shrink-0">
+          {smartBadges.map((network, index) => {
+            const isNational = ['ESPN', 'ABC', 'TNT', 'NBA TV', 'TruTV'].includes(network);
+            const isRSN = ['FanDuel', 'MSG', 'Bally', 'YES', 'NBC Sports', 'FOX Sports'].some(keyword => network.includes(keyword));
+            const isLP = network === 'League Pass';
+            
+            // Apply visual hierarchy
+            let badgeClass = '';
+            if (isNational) {
+              badgeClass = compact ? 'text-sm px-2 py-1 font-bold' : 'text-lg px-3 py-1.5 font-bold';
+            } else if (isRSN) {
+              badgeClass = compact ? 'text-sm px-2 py-1 font-normal border' : 'text-sm px-2 py-1 font-normal border';
+            } else if (isLP) {
+              badgeClass = compact ? 'text-xs px-2 py-1 font-normal border text-gray-600' : 'text-xs px-2 py-1 font-normal border text-gray-600';
+            }
+            
+            return (
+              <span
+                key={index}
+                className={`rounded-full ${badgeClass} break-words`}
+                style={getBadgeStyle(network, networkColorMode)}
+                role="img"
+                aria-label={getNetworkSemanticLabel(network)}
+              >
+                {network}
+              </span>
+            );
+          })}
+          
+          {/* Blackout warnings */}
+          {showBlackout && blackoutStatus !== 'no-lp' && (
+            <span className="text-xs text-orange-600 font-medium">
+              {blackoutStatus === 'national-blackout' && '⚠ Blacked out on LP'}
+              {blackoutStatus === 'regional-blackout' && '⚠ Regional only'}
+              {blackoutStatus === 'available' && '✓ LP available'}
+            </span>
+          )}
         </div>
       </div>
     </div>

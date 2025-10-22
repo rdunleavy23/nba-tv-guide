@@ -153,7 +153,7 @@ export async function GET(request: NextRequest) {
       };
     });
     
-    return NextResponse.json({ games, date });
+    return NextResponse.json({ games, date, gameCount: games.length });
   } catch (error) {
     console.error('Scoreboard API error:', error);
     return NextResponse.json(
