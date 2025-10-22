@@ -5,6 +5,12 @@
  * Tracks LCP, FID, CLS, and other performance metrics
  */
 
+interface PerformanceMemory {
+  usedJSHeapSize: number;
+  totalJSHeapSize: number;
+  jsHeapSizeLimit: number;
+}
+
 interface WebVitalMetric {
   name: string;
   value: number;
@@ -154,11 +160,11 @@ export function checkPerformanceBudget(): {
  */
 export function getPerformanceSummary(): {
   navigation: PerformanceNavigationTiming | null;
-  memory: any;
+  memory: PerformanceMemory | null;
   budget: ReturnType<typeof checkPerformanceBudget>;
 } {
   const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
-  const memory = (performance as any).memory;
+  const memory = (performance as Performance & { memory?: PerformanceMemory }).memory || null;
   
   return {
     navigation,

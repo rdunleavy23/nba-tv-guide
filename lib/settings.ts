@@ -1,6 +1,5 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { getBrowserTimezone, getTimezoneWithFallback } from './timezone';
 
 export interface Settings {
   favoriteTeam: string;

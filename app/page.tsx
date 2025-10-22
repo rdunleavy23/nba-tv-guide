@@ -38,7 +38,7 @@ export default function Home() {
   // Sync URL parameters with settings on mount
   useEffect(() => {
     syncURLWithSettings(settings, settings.updateSettings);
-  }, []);
+  }, [settings]);
 
   // Update URL when settings change
   useEffect(() => {
@@ -51,7 +51,7 @@ export default function Home() {
       try {
         const data = await getTodaysGames();
         setResult(data);
-      } catch (error) {
+      } catch {
         setResult({ games: [], error: 'Failed to load games' });
       } finally {
         setLoading(false);
