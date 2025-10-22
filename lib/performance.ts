@@ -67,20 +67,13 @@ function handleWebVital(metric: WebVitalMetric): void {
 
 /**
  * Initialize Core Web Vitals monitoring
+ * Note: Web-vitals is loaded dynamically in layout.tsx to avoid bundle bloat
  */
 export function initWebVitals(): void {
   if (typeof window === 'undefined') return;
-
-  // Load web-vitals library dynamically to avoid bundle bloat
-  import('web-vitals').then(({ getCLS, getFID, getFCP, getLCP, getTTFB }) => {
-    getCLS(handleWebVital);
-    getFID(handleWebVital);
-    getFCP(handleWebVital);
-    getLCP(handleWebVital);
-    getTTFB(handleWebVital);
-  }).catch((error) => {
-    console.warn('Failed to load web-vitals:', error);
-  });
+  
+  // Web-vitals monitoring is handled in layout.tsx via dynamic import
+  console.log('Performance monitoring initialized via layout.tsx');
 }
 
 /**
