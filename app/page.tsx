@@ -1,7 +1,7 @@
 import { headers } from 'next/headers';
 import { Suspense } from 'react';
 import { AnswerChip, type Game } from '@/components/answer-chip';
-import { GameSkeleton, SkeletonList } from '@/components/game-skeleton';
+import { SkeletonList } from '@/components/game-skeleton';
 import { ClientWrapper } from '@/components/client-wrapper';
 import { Logo } from '@/components/logo';
 import { DayNavigator } from '@/components/day-navigator';
@@ -110,8 +110,6 @@ export default async function HomePage() {
   
   // Fetch tonight's games
   const { games, error } = await fetchTonightGames();
-  
-  const localDateString = getLocalDateString('America/New_York');
 
   return (
     <ClientWrapper>
@@ -135,7 +133,7 @@ export default async function HomePage() {
           {error ? (
             <div className="p-8 text-center">
               <p className="text-sm text-muted-foreground mb-2">
-                Couldn't load games.
+                Couldn&apos;t load games.
               </p>
               <button 
                 onClick={() => window.location.reload()}

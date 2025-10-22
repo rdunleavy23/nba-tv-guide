@@ -169,7 +169,7 @@ export function getNetworkPriority(network: string): number {
 }
 
 // Smart badge filtering with 2-badge max rule
-export function filterSmartBadges(networks: string[], showLeaguePass: boolean, isLeaguePassOnly: boolean): string[] { // eslint-disable-line @typescript-eslint/no-unused-vars
+export function filterSmartBadges(networks: string[], showLeaguePass: boolean, isLeaguePassOnly: boolean): string[] {
   const normalized = networks.map(normalizeNetworkName);
   const nationalNetworks = ['ESPN', 'ABC', 'TNT', 'NBA TV', 'TruTV'];
   const rsnKeywords = ['FanDuel', 'MSG', 'Bally', 'YES', 'NBC Sports', 'FOX Sports', 'AT&T SportsNet', 'Spectrum', 'Root Sports'];

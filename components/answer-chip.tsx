@@ -1,6 +1,6 @@
 import { Badge } from '@/components/ui/badge';
 import { getNationalNetwork } from '@/lib/national';
-import { lpAvailableForUser, getLPStatusText } from '@/lib/blackout';
+import { lpAvailableForUser } from '@/lib/blackout';
 import { Region } from '@/lib/region';
 
 export interface Game {
