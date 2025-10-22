@@ -126,16 +126,6 @@ export default function SettingsPage() {
           <legend className="text-lg font-semibold text-gray-800">Content</legend>
           
           <div className="flex items-center justify-between">
-            <label className="text-sm font-medium text-gray-700">No Spoilers</label>
-            <input
-              type="checkbox"
-              checked={settings.noSpoilers}
-              onChange={(e) => settings.setNoSpoilers(e.target.checked)}
-              className="rounded border-gray-300 text-[var(--accent)] focus:ring-[var(--accent)]"
-            />
-          </div>
-
-          <div className="flex items-center justify-between">
             <label className="text-sm font-medium text-gray-700">Hide Finished Games</label>
             <input
               type="checkbox"

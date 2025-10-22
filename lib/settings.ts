@@ -6,7 +6,6 @@ export interface Settings {
   compact: boolean;
   tz: string;
   hourFormat: '12' | '24';
-  noSpoilers: boolean;
   hideFinished: boolean;
   showLeaguePass: boolean;
   showBlackout: boolean;
@@ -20,7 +19,6 @@ export const defaultSettings: Settings = {
   compact: true,
   tz: 'America/New_York', // Default timezone
   hourFormat: '12',
-  noSpoilers: true,
   hideFinished: true,
   showLeaguePass: true,
   showBlackout: true,
@@ -34,7 +32,6 @@ export const useSettingsStore = create<Settings & {
   setCompact: (compact: boolean) => void;
   setTz: (tz: string) => void;
   setHourFormat: (hourFormat: '12' | '24') => void;
-  setNoSpoilers: (noSpoilers: boolean) => void;
   setHideFinished: (hideFinished: boolean) => void;
   setShowLeaguePass: (showLeaguePass: boolean) => void;
   setShowBlackout: (showBlackout: boolean) => void;
@@ -51,7 +48,6 @@ export const useSettingsStore = create<Settings & {
       setCompact: (compact: boolean) => set({ compact }),
       setTz: (tz: string) => set({ tz }),
       setHourFormat: (hourFormat: '12' | '24') => set({ hourFormat }),
-      setNoSpoilers: (noSpoilers: boolean) => set({ noSpoilers }),
       setHideFinished: (hideFinished: boolean) => set({ hideFinished }),
       setShowLeaguePass: (showLeaguePass: boolean) => set({ showLeaguePass }),
       setShowBlackout: (showBlackout: boolean) => set({ showBlackout }),

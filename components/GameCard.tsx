@@ -13,7 +13,6 @@ interface GameCardProps {
   showBlackout: boolean; // eslint-disable-line @typescript-eslint/no-unused-vars
   networkColorMode: 'brand' | 'mono';
   hiddenNetworks: string[];
-  noSpoilers: boolean;
 }
 
 export default function GameCard({
@@ -25,7 +24,6 @@ export default function GameCard({
   showBlackout,
   networkColorMode,
   hiddenNetworks,
-  noSpoilers,
 }: GameCardProps) {
   const filteredBroadcasts = game.broadcasts
     .filter(broadcast => !hiddenNetworks.includes(broadcast))
@@ -49,7 +47,7 @@ export default function GameCard({
       <div className={`flex items-center justify-between gap-3 ${textSizeClass}`}>
         {/* Time - Left side */}
         <div className={`font-bold ${timeSizeClass} text-gray-900 tabular-nums flex-shrink-0`}>
-          {noSpoilers && game.flags.isFinished ? '—' : formatGameTime(game.time, tz, hour12)}
+          {formatGameTime(game.time, tz, hour12)}
         </div>
         
         {/* Matchup - Center */}
@@ -90,9 +88,9 @@ export default function GameCard({
           {/* Blackout warnings */}
           {showBlackout && blackoutStatus !== 'no-lp' && (
             <span className="text-xs text-orange-600 font-medium">
-              {blackoutStatus === 'national-blackout' && '⚠ Blacked out on LP'}
-              {blackoutStatus === 'regional-blackout' && '⚠ Regional only'}
-              {blackoutStatus === 'available' && '✓ LP available'}
+              {blackoutStatus === 'national-blackout' && 'Blacked out on LP'}
+              {blackoutStatus === 'regional-blackout' && 'Regional only'}
+              {blackoutStatus === 'available' && 'LP available'}
             </span>
           )}
         </div>

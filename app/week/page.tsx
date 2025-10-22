@@ -120,7 +120,6 @@ export default function WeekPage() {
                 showBlackout={settings.showBlackout}
                 networkColorMode={settings.networkColorMode}
                 hiddenNetworks={settings.hiddenNetworks}
-                noSpoilers={settings.noSpoilers}
               />
           ))}
         </div>

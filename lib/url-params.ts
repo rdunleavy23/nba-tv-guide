@@ -22,14 +22,6 @@ export function parseURLParams(searchParams: URLSearchParams): Partial<Settings>
     params.tz = tz;
   }
 
-  // No spoilers
-  const spoilers = searchParams.get('spoilers');
-  if (spoilers === 'off') {
-    params.noSpoilers = false;
-  } else if (spoilers === 'on') {
-    params.noSpoilers = true;
-  }
-
   // Compact mode
   const compact = searchParams.get('compact');
   if (compact === 'on') {
@@ -64,10 +56,6 @@ export function generateURLParams(settings: Settings): URLSearchParams {
   // Only add non-default values to keep URLs clean
   if (settings.tz !== 'America/New_York') {
     params.set('tz', settings.tz);
-  }
-
-  if (!settings.noSpoilers) {
-    params.set('spoilers', 'off');
   }
 
   if (!settings.compact) {
