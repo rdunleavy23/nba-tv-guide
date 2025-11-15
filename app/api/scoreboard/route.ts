@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { filterToNationalOnly } from '@/lib/national';
+import { getTodayForEspnApi, getDateForEspnApi } from '@/lib/timezone';
 
 export const runtime = 'edge';
 
@@ -15,7 +16,25 @@ export interface Game {
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const date = searchParams.get('date') || new Date().toISOString().split('T')[0].replace(/-/g, '');
+    
+    // If date is provided, parse it; otherwise use today in ET
+    // CRITICAL: Use Eastern Time, not UTC, to match user expectations
+    let date: string;
+    const dateParam = searchParams.get('date');
+    if (dateParam) {
+      // If date is provided as YYYYMMDD, use it directly
+      // If provided as YYYY-MM-DD or Date string, convert to ET first
+      if (/^\d{8}$/.test(dateParam)) {
+        date = dateParam; // Already in ESPN format
+      } else {
+        // Parse the date and convert to ET
+        const parsedDate = new Date(dateParam);
+        date = getDateForEspnApi(parsedDate, 'America/New_York');
+      }
+    } else {
+      // Default to today in Eastern Time (not UTC!)
+      date = getTodayForEspnApi('America/New_York');
+    }
     
     const espnUrl = `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates=${date}`;
     
