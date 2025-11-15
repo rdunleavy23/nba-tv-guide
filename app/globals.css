@@ -136,9 +136,13 @@ body {
 }
 
 /* Team logo styling - convert to white/gray monochrome preserving contrast */
-/* Strategy: Convert to grayscale, then use brightness/contrast to create white (bright areas) and gray (darker areas) */
+/* Use a filter chain that preserves luminance differences for gray details */
 .team-logo-white svg {
-  filter: grayscale(100%) contrast(1.5) brightness(1.3);
-  /* This makes bright colors white, darker colors become gray */
+  /* Convert to grayscale, then invert so dark becomes light, adjust for contrast */
+  filter: grayscale(100%) brightness(0) invert(1) contrast(1.1) brightness(1.2);
+  /* This should make: 
+     - Original dark colors -> gray (after invert they become light gray)
+     - Original light colors -> white (after invert they become bright white)
+  */
 }
 
