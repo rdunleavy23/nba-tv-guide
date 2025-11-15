@@ -9,7 +9,7 @@ import { SettingsTrigger } from '@/components/settings-trigger';
 import { ErrorFallback } from '@/components/error-fallback';
 import { TeamGlyph } from '@/components/team-glyph';
 import { GameTime } from '@/components/game-time';
-import { isGameTonight, getTodayForEspnApi } from '@/lib/timezone';
+import { isGameTonight, getTodayForEspnApi, getDateForEspnApi, isGameOnDate } from '@/lib/timezone';
 import { filterToNationalOnly } from '@/lib/national';
 import { buildStreamingOptions, selectPrimaryOption } from '@/lib/streaming';
 import { ExternalLink } from 'lucide-react';
@@ -53,7 +53,7 @@ function GameList({ games }: { games: Game[] }) {
   if (games.length === 0) {
     return (
       <div className="p-8 text-center text-muted-foreground text-sm">
-        No games tonight. Check back tomorrow.
+        No games scheduled. Check another day.
       </div>
     );
   }
@@ -67,10 +67,12 @@ function GameList({ games }: { games: Game[] }) {
   );
 }
 
-async function fetchTonightGames(): Promise<{ games: Game[]; error?: string }> {
+async function fetchGamesForDate(targetDate?: Date): Promise<{ games: Game[]; error?: string }> {
   try {
-    // Use Eastern Time date for ESPN API to match the "tonight" filter
-    const date = getTodayForEspnApi('America/New_York');
+    // Use provided date or default to today in Eastern Time
+    const date = targetDate 
+      ? getDateForEspnApi(targetDate, 'America/New_York')
+      : getTodayForEspnApi('America/New_York');
     const espnUrl = `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates=${date}`;
 
     const response = await fetch(espnUrl, {
@@ -175,12 +177,13 @@ async function fetchTonightGames(): Promise<{ games: Game[]; error?: string }> {
       };
     });
 
-    // Filter to tonight only
-    const tonightGames = games.filter((game: Game) =>
-      isGameTonight(game.startTimeUtc, 'America/New_York')
+    // Filter to the target date in Eastern Time
+    const targetDateForFilter = targetDate || new Date();
+    const filteredGames = games.filter((game: Game) =>
+      isGameOnDate(game.startTimeUtc, targetDateForFilter, 'America/New_York')
     );
 
-    return { games: tonightGames };
+    return { games: filteredGames };
   } catch (error) {
     console.error('Error fetching games:', error);
     return {
@@ -190,8 +193,22 @@ async function fetchTonightGames(): Promise<{ games: Game[]; error?: string }> {
   }
 }
 
-export default async function HomePage() {
-  const { games, error } = await fetchTonightGames();
+interface HomePageProps {
+  searchParams: Promise<{ date?: string }>;
+}
+
+export default async function HomePage({ searchParams }: HomePageProps) {
+  // Parse date from search params if provided (Next.js 15 requires awaiting searchParams)
+  const params = await searchParams;
+  let targetDate: Date | undefined;
+  if (params?.date) {
+    const parsed = new Date(params.date);
+    if (!isNaN(parsed.getTime())) {
+      targetDate = parsed;
+    }
+  }
+  
+  const { games, error } = await fetchGamesForDate(targetDate);
 
   return (
     <ClientWrapper>
@@ -200,7 +217,7 @@ export default async function HomePage() {
         <header className="py-4 border-b">
           <div className="flex items-center justify-between">
             <Logo />
-            <DayNavigatorWrapper />
+            <DayNavigatorWrapper initialDate={targetDate} />
           </div>
         </header>
 

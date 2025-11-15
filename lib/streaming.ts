@@ -150,12 +150,13 @@ export function buildStreamingOptions(
     options.push(makeOptionForPlatform(id, net, espnGameId));
   }
 
-  // Add League Pass if available
-  if (hasLeaguePass) {
+  // Add League Pass if available OR if no national networks (most games are on LP)
+  // ESPN API flag indicates LP-exclusive, but most games are available on LP
+  if (hasLeaguePass || normalizedNetworks.length === 0) {
     options.push(makeOptionForPlatform('league_pass', 'League Pass', espnGameId));
   }
 
-  // Fallback: info-only option if no streams available
+  // Fallback: info-only option if no streams available (should rarely happen)
   if (!options.length) {
     options.push({
       id: 'info',
