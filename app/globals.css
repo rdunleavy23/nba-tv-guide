@@ -135,24 +135,10 @@ body {
   transition-duration: 200ms;
 }
 
-/* Team logo styling - make all SVG elements white while preserving details */
-.team-logo-white svg,
-.team-logo-white svg * {
-  fill: white !important;
-  stroke: white !important;
-  color: white !important;
-}
-
-.team-logo-white svg path,
-.team-logo-white svg circle,
-.team-logo-white svg ellipse,
-.team-logo-white svg rect,
-.team-logo-white svg polygon,
-.team-logo-white svg polyline,
-.team-logo-white svg g path,
-.team-logo-white svg g circle,
-.team-logo-white svg use {
-  fill: white !important;
-  stroke: white !important;
+/* Team logo styling - convert to white/gray monochrome preserving contrast */
+/* Strategy: Convert to grayscale, then use brightness/contrast to create white (bright areas) and gray (darker areas) */
+.team-logo-white svg {
+  filter: grayscale(100%) contrast(1.5) brightness(1.3);
+  /* This makes bright colors white, darker colors become gray */
 }
 
