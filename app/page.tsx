@@ -1,5 +1,6 @@
 import { Suspense } from 'react';
-import { AnswerChip, type Game } from '@/components/answer-chip';
+import { AnswerChip } from '@/components/answer-chip';
+import type { Game } from '@/lib/game-types';
 import { SkeletonList } from '@/components/game-skeleton';
 import { ClientWrapper } from '@/components/client-wrapper';
 import { Logo } from '@/components/logo';
@@ -154,7 +155,7 @@ async function fetchTonightGames(): Promise<{ games: Game[]; error?: string }> {
       const gameId = event.id as string;
 
       // Build all streaming options for this game
-      const streamingOptions = buildStreamingOptions(gameId, nationalNetworks, isLeaguePass);
+      const streamingOptions = buildStreamingOptions(nationalNetworks, isLeaguePass, gameId);
 
       // Select the primary option (can later incorporate user prefs from cookie)
       const primaryOption = selectPrimaryOption(streamingOptions, null);

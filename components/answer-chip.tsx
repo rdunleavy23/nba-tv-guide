@@ -1,16 +1,7 @@
 import { Badge } from '@/components/ui/badge';
 import { Play, Info } from 'lucide-react';
-import { StreamingOption } from '@/lib/streaming';
-
-export interface Game {
-  id: string;
-  startTimeUtc: string;
-  teams: { away: { abbr: string }, home: { abbr: string } };
-  networks: string[]; // national only for UI
-  leaguePass: boolean;
-  streamingOptions: StreamingOption[];
-  primaryOption: StreamingOption;
-}
+import type { Game } from '@/lib/game-types';
+import type { StreamingOption } from '@/lib/streaming-types';
 
 interface AnswerChipProps {
   game: Game;

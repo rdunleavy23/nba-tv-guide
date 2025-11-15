@@ -1,59 +1,185 @@
 /**
- * Streaming platform types and selection logic
+ * Streaming platform selection logic
  *
- * This module handles:
- * - All possible ways to watch a game
- * - User preferences for platform ordering
- * - Selection of the "best" platform based on availability + user prefs
+ * Centralized system for:
+ * - Mapping normalized networks to streaming platforms
+ * - Building all available options for each game
+ * - Selecting the "best" platform based on availability + user preferences
  */
 
-export type StreamingPlatformId =
-  | 'espn'
-  | 'abc'
-  | 'nbc'
-  | 'peacock'
-  | 'prime_video'
-  | 'nba_tv'
-  | 'league_pass'
-  | 'other'
-  | 'info'; // "just info, not a stream"
+import type {
+  StreamingPlatformId,
+  StreamingOption,
+  UserStreamingPrefs,
+} from './streaming-types';
 
-export type StreamingLinkTarget = 'web';
-// 'app' can be added later, but browser decides via universal links
-
-export interface StreamingLinkVariants {
-  web: string;              // always present - standard HTTPS URL
-  iosUniversal?: string;    // optional if it differs
-  androidAppLink?: string;  // optional if it differs
-}
-
-export interface StreamingOption {
-  id: StreamingPlatformId;
-  kind: 'network' | 'league_pass' | 'ott' | 'info';
-  links: StreamingLinkVariants;
-  priority: number; // server-side default priority (lower = better)
-  label: string;    // display label: "ESPN", "League Pass", etc.
-}
-
-export interface UserStreamingPrefs {
-  preferredOrder: StreamingPlatformId[];
-  // e.g. ['league_pass', 'espn', 'abc', 'nbc', 'peacock', 'prime_video', 'nba_tv', 'info']
-  preferLocalTime: boolean; // for timezone
-  preferNetworkApps: boolean; // future: tweak within same game
+/**
+ * Map a normalized network name to its StreamingPlatformId
+ */
+function mapNormalizedNetworkToPlatformId(
+  normalized: string
+): StreamingPlatformId | null {
+  switch (normalized) {
+    case 'ESPN':
+    case 'ESPN2':
+      return 'espn';
+    case 'ABC':
+      return 'abc';
+    case 'NBC':
+      return 'nbc';
+    case 'Peacock':
+      return 'peacock';
+    case 'Prime Video':
+      return 'prime_video';
+    case 'NBA TV':
+      return 'nba_tv';
+    default:
+      return null;
+  }
 }
 
 /**
- * Select the primary streaming option based on:
- * 1. User preferences (if available)
- * 2. Platform availability
- * 3. Default priority
+ * Create a StreamingOption for a given platform
+ */
+function makeOptionForPlatform(
+  id: StreamingPlatformId,
+  label: string,
+  espnGameId: string
+): StreamingOption {
+  switch (id) {
+    case 'espn':
+      return {
+        id,
+        label: 'ESPN',
+        kind: 'network',
+        links: {
+          web: `https://www.espn.com/nba/game/_/gameId/${espnGameId}`,
+        },
+        defaultPriority: 10,
+      };
+    case 'abc':
+      return {
+        id,
+        label: 'ABC',
+        kind: 'network',
+        links: {
+          web: 'https://abc.com/watch-live',
+        },
+        defaultPriority: 20,
+      };
+    case 'nbc':
+      return {
+        id,
+        label: 'NBC',
+        kind: 'network',
+        links: {
+          web: 'https://www.nbc.com/live',
+        },
+        defaultPriority: 30,
+      };
+    case 'peacock':
+      return {
+        id,
+        label: 'Peacock',
+        kind: 'ott',
+        links: {
+          web: 'https://www.peacocktv.com/sports/nba',
+        },
+        defaultPriority: 40,
+      };
+    case 'prime_video':
+      return {
+        id,
+        label: 'Prime',
+        kind: 'ott',
+        links: {
+          web: 'https://www.amazon.com/gp/video/storefront/ref=atv_nb_live',
+        },
+        defaultPriority: 50,
+      };
+    case 'nba_tv':
+      return {
+        id,
+        label: 'NBA TV',
+        kind: 'network',
+        links: {
+          web: 'https://www.nba.com/watch/league-pass-stream',
+        },
+        defaultPriority: 60,
+      };
+    case 'league_pass':
+      return {
+        id,
+        label: 'LP',
+        kind: 'league_pass',
+        links: {
+          web: `https://www.nba.com/game/${espnGameId}`,
+        },
+        defaultPriority: 70,
+      };
+    case 'info':
+    case 'other':
+    default:
+      return {
+        id: 'info',
+        label: 'TV info TBD',
+        kind: 'info',
+        links: {
+          web: `https://www.espn.com/nba/game/_/gameId/${espnGameId}`,
+        },
+        defaultPriority: 999,
+      };
+  }
+}
+
+/**
+ * Build streaming options from normalized network names and League Pass flag
+ */
+export function buildStreamingOptions(
+  normalizedNetworks: string[],
+  hasLeaguePass: boolean,
+  espnGameId: string
+): StreamingOption[] {
+  const options: StreamingOption[] = [];
+
+  // Add network/OTT streaming options
+  for (const net of normalizedNetworks) {
+    const id = mapNormalizedNetworkToPlatformId(net);
+    if (!id) continue;
+
+    options.push(makeOptionForPlatform(id, net, espnGameId));
+  }
+
+  // Add League Pass if available
+  if (hasLeaguePass) {
+    options.push(makeOptionForPlatform('league_pass', 'League Pass', espnGameId));
+  }
+
+  // Fallback: info-only option if no streams available
+  if (!options.length) {
+    options.push({
+      id: 'info',
+      label: 'TV info TBD',
+      kind: 'info',
+      links: {
+        web: `https://www.espn.com/nba/game/_/gameId/${espnGameId}`,
+      },
+      defaultPriority: 999,
+    });
+  }
+
+  return options;
+}
+
+/**
+ * Select the primary streaming option based on user preferences and default ordering
  */
 export function selectPrimaryOption(
   options: StreamingOption[],
-  prefs: UserStreamingPrefs | null
+  prefs?: UserStreamingPrefs | null
 ): StreamingOption {
   if (!options.length) {
-    throw new Error('No streaming options available');
+    throw new Error('selectPrimaryOption called with empty options');
   }
 
   // Default order: current NBA broadcast partners (2024-25 season)
@@ -65,128 +191,21 @@ export function selectPrimaryOption(
     'prime_video',
     'nba_tv',
     'league_pass',
-    'other',
     'info',
+    'other',
   ];
 
-  const order = prefs?.preferredOrder ?? defaultOrder;
+  const order =
+    prefs?.preferredOrder?.length ? prefs.preferredOrder : defaultOrder;
 
-  // Lower index = better
   const score = (id: StreamingPlatformId) => {
-    const i = order.indexOf(id);
-    return i === -1 ? Number.MAX_SAFE_INTEGER : i;
+    const idx = order.indexOf(id);
+    return idx === -1 ? Number.MAX_SAFE_INTEGER : idx;
   };
 
-  // Sort by user preference first, then by server-side priority
   return options
     .slice()
-    .sort((a, b) => score(a.id) - score(b.id) || a.priority - b.priority)[0];
-}
-
-/**
- * Build streaming options from game data
- */
-export function buildStreamingOptions(
-  gameId: string,
-  networks: string[],
-  hasLeaguePass: boolean
-): StreamingOption[] {
-  const options: StreamingOption[] = [];
-
-  // Add network streaming options
-  networks.forEach((network, index) => {
-    const normalized = network.toUpperCase();
-
-    if (normalized.includes('ESPN')) {
-      options.push({
-        id: 'espn',
-        kind: 'network',
-        links: {
-          web: `https://www.espn.com/nba/game/_/gameId/${gameId}`,
-        },
-        priority: index,
-        label: 'ESPN',
-      });
-    } else if (normalized.includes('ABC')) {
-      options.push({
-        id: 'abc',
-        kind: 'network',
-        links: {
-          web: 'https://abc.com/watch-live',
-        },
-        priority: index,
-        label: 'ABC',
-      });
-    } else if (normalized.includes('NBC')) {
-      options.push({
-        id: 'nbc',
-        kind: 'network',
-        links: {
-          web: 'https://www.nbc.com/live',
-        },
-        priority: index,
-        label: 'NBC',
-      });
-    } else if (normalized.includes('PEACOCK')) {
-      options.push({
-        id: 'peacock',
-        kind: 'ott',
-        links: {
-          web: 'https://www.peacocktv.com/sports/nba',
-        },
-        priority: index,
-        label: 'Peacock',
-      });
-    } else if (normalized.includes('PRIME VIDEO') || normalized.includes('AMAZON')) {
-      options.push({
-        id: 'prime_video',
-        kind: 'ott',
-        links: {
-          web: 'https://www.amazon.com/gp/video/storefront/ref=atv_nb_live',
-        },
-        priority: index,
-        label: 'Prime',
-      });
-    } else if (normalized.includes('NBA TV')) {
-      options.push({
-        id: 'nba_tv',
-        kind: 'network',
-        links: {
-          web: 'https://www.nba.com/watch/league-pass-stream',
-        },
-        priority: index,
-        label: 'NBA TV',
-      });
-    }
-  });
-
-  // Add League Pass option if available
-  if (hasLeaguePass) {
-    options.push({
-      id: 'league_pass',
-      kind: 'league_pass',
-      links: {
-        web: `https://www.nba.com/game/${gameId}`,
-      },
-      priority: networks.length, // After all networks
-      label: 'LP',
-    });
-  }
-
-  // Fallback: info-only (ESPN game page)
-  if (options.length === 0) {
-    options.push({
-      id: 'info',
-      kind: 'info',
-      links: {
-        web: `https://www.espn.com/nba/game/_/gameId/${gameId}`,
-      },
-      priority: 999,
-      label: 'TV info TBD',
-    });
-  }
-
-  return options;
+    .sort((a, b) => score(a.id) - score(b.id) || a.defaultPriority - b.defaultPriority)[0];
 }
 
 /**
@@ -234,7 +253,5 @@ export function getDefaultPreferences(): UserStreamingPrefs {
       'other',
       'info',
     ],
-    preferLocalTime: false,
-    preferNetworkApps: false,
   };
 }
