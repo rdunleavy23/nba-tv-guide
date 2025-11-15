@@ -19,7 +19,7 @@ export const runtime = 'edge';
 function GameRow({ game }: { game: Game }) {
   return (
     <a
-      href={game.primaryLink.links.web}
+      href={game.primaryOption.links.web}
       target="_blank"
       rel="noopener noreferrer"
       className="group flex items-center gap-4 px-4 py-3.5 border-b hover:bg-accent/10 transition-colors cursor-pointer"
@@ -157,7 +157,7 @@ async function fetchTonightGames(): Promise<{ games: Game[]; error?: string }> {
       const streamingOptions = buildStreamingOptions(gameId, nationalNetworks, isLeaguePass);
 
       // Select the primary option (can later incorporate user prefs from cookie)
-      const primaryLink = selectPrimaryOption(streamingOptions, null);
+      const primaryOption = selectPrimaryOption(streamingOptions, null);
 
       return {
         id: gameId,
@@ -169,7 +169,7 @@ async function fetchTonightGames(): Promise<{ games: Game[]; error?: string }> {
         networks: nationalNetworks,
         leaguePass: isLeaguePass,
         streamingOptions,
-        primaryLink,
+        primaryOption,
       };
     });
 

@@ -9,7 +9,7 @@ export interface Game {
   networks: string[]; // national only for UI
   leaguePass: boolean;
   streamingOptions: StreamingOption[];
-  primaryLink: StreamingOption;
+  primaryOption: StreamingOption;
 }
 
 interface AnswerChipProps {
@@ -31,13 +31,13 @@ function PlatformIcon({ kind }: { kind: StreamingOption['kind'] }) {
  * Server component (no client JS)
  *
  * Logic:
- * - Uses the primaryLink selected by the streaming system
+ * - Uses the primaryOption selected by the streaming system
  * - Shows platform name without blackout detection
  * - All badges use neutral colors
  */
 export function AnswerChip({ game }: AnswerChipProps) {
-  const primaryLink = game.primaryLink;
-  const label = primaryLink.label;
+  const primaryOption = game.primaryOption;
+  const label = primaryOption.label;
   const ariaLabel = `Watch on ${label}`;
 
   return (
@@ -45,7 +45,7 @@ export function AnswerChip({ game }: AnswerChipProps) {
       className="inline-flex h-7 items-center gap-1 px-3 rounded-md border border-muted-foreground/20 text-xs font-medium text-foreground bg-transparent"
       aria-label={ariaLabel}
     >
-      <PlatformIcon kind={primaryLink.kind} />
+      <PlatformIcon kind={primaryOption.kind} />
       {label}
     </Badge>
   );

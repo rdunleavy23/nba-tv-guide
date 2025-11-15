@@ -34,8 +34,8 @@ describe('NBA Tonight Acceptance Tests', () => {
 
     test('should not include common RSN keywords in national networks', () => {
       const rsnKeywords = ['MSG', 'Bally', 'YES', 'NBC Sports', 'AT&T SportsNet', 'Spectrum', 'TSN', 'SN', 'FanDuel'];
-      const nationalNetworks = ['ABC', 'ESPN', 'ESPN2', 'TNT', 'NBA TV'];
-      
+      const nationalNetworks = ['ABC', 'ESPN', 'ESPN2', 'NBC', 'Peacock', 'NBA TV', 'Prime Video'];
+
       rsnKeywords.forEach(keyword => {
         expect(nationalNetworks).not.toContain(keyword);
       });

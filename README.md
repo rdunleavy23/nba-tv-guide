@@ -69,13 +69,13 @@ Open [http://localhost:3000](http://localhost:3000) to see the app.
 Inspired by:
 - **Ceefax/Teletext**: Grid-first clarity and information density
 - **Plain Text Sports**: Restraint and focus on essential information
-- **ESPN/TNT Scorebugs**: Grouped micro-UI elements
+- **ESPN/NBC Scorebugs**: Grouped micro-UI elements
 - **Vignelli Subway Standards**: Disciplined visual hierarchy
 
 ## Technical Notes
 
 - **SSR Hydration**: Inline script prevents accent color flicker
-- **Network Filtering**: Only shows nationals (ESPN, ABC, TNT, NBA TV) and streamers
+- **Network Filtering**: Only shows nationals (ESPN, ABC, NBC, Peacock, Prime Video, NBA TV) and League Pass
 - **Contrast Compliance**: Auto-detects luminance for WCAG AA text colors
 - **Defensive Parsing**: Handles ESPN API shape drift gracefully
 - **Brand Compliance**: Text chips only, no logos or promotional copy

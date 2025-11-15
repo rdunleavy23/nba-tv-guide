@@ -9,13 +9,11 @@ export function normalizeNetworkName(name: string): string {
   const mappings: Record<string, string> = {
     // Nationals
     'espn': 'ESPN',
-    'abc': 'ABC', 
-    'tnt': 'TNT',
+    'abc': 'ABC',
+    'nbc': 'NBC',
     'nba tv': 'NBA TV',
     'nbatv': 'NBA TV',
     'nba-tv': 'NBA TV',
-    'trutv': 'TruTV',
-    'tru tv': 'TruTV',
     
     // Streaming platforms
     'peacock': 'Peacock',
@@ -44,9 +42,8 @@ export const NETWORK_COLORS: Record<string, string> = {
   // Nationals - WCAG AA compliant colors (3:1+ contrast)
   'ESPN': '#E31837',      // ESPN Red - 4.5:1 contrast with white text
   'ABC': '#000000',       // ABC Black - 21:1 contrast with white text
-  'TNT': '#E31837',       // TNT Red - 4.5:1 contrast with white text
+  'NBC': '#000000',       // NBC Black - 21:1 contrast with white text
   'NBA TV': '#E31837',    // NBA TV Red - 4.5:1 contrast with white text
-  'TruTV': '#E31837',     // TruTV Red - 4.5:1 contrast with white text
   
   // Streaming platforms - WCAG AA compliant colors
   'Peacock': '#000000',   // Peacock Black - 21:1 contrast with white text
@@ -122,9 +119,8 @@ export function getNetworkSemanticLabel(network: string): string {
   const semanticLabels: Record<string, string> = {
     'ESPN': 'ESPN cable network',
     'ABC': 'ABC broadcast network',
-    'TNT': 'TNT cable network',
+    'NBC': 'NBC broadcast network',
     'NBA TV': 'NBA TV cable network',
-    'TruTV': 'TruTV cable network',
     'Peacock': 'Peacock streaming service',
     'Prime Video': 'Amazon Prime Video streaming',
     'Max': 'Max streaming service',
@@ -139,7 +135,7 @@ export function getNetworkSemanticLabel(network: string): string {
 
 // Filter out RSNs, keep only nationals and streaming platforms
 export function filterNationalAndStreaming(networks: string[]): string[] {
-  const nationalNetworks = ['ESPN', 'ABC', 'TNT', 'NBA TV', 'TruTV'];
+  const nationalNetworks = ['ESPN', 'ABC', 'NBC', 'NBA TV'];
   const streamingNetworks = ['Peacock', 'Prime Video', 'Max', 'Fubo', 'YouTube TV', 'Apple TV+', 'Netflix'];
   
   const normalized = networks.map(normalizeNetworkName);
@@ -152,9 +148,9 @@ export function filterNationalAndStreaming(networks: string[]): string[] {
 // Network priority system for smart badge filtering
 export function getNetworkPriority(network: string): number {
   const normalizedName = normalizeNetworkName(network);
-  
+
   // Priority 1: National networks (always accessible)
-  const nationalNetworks = ['ESPN', 'ABC', 'TNT', 'NBA TV', 'TruTV'];
+  const nationalNetworks = ['ESPN', 'ABC', 'NBC', 'NBA TV'];
   if (nationalNetworks.includes(normalizedName)) return 1;
   
   // Priority 2: Regional Sports Networks (RSNs)
@@ -171,7 +167,7 @@ export function getNetworkPriority(network: string): number {
 // Smart badge filtering with 2-badge max rule
 export function filterSmartBadges(networks: string[], showLeaguePass: boolean, isLeaguePassOnly: boolean): string[] {
   const normalized = networks.map(normalizeNetworkName);
-  const nationalNetworks = ['ESPN', 'ABC', 'TNT', 'NBA TV', 'TruTV'];
+  const nationalNetworks = ['ESPN', 'ABC', 'NBC', 'NBA TV'];
   const rsnKeywords = ['FanDuel', 'MSG', 'Bally', 'YES', 'NBC Sports', 'FOX Sports', 'AT&T SportsNet', 'Spectrum', 'Root Sports'];
   
   // Sort by priority
@@ -208,7 +204,7 @@ export type BlackoutStatus = 'available' | 'national-blackout' | 'regional-black
 
 export function getBlackoutStatus(networks: string[], isLeaguePass: boolean): BlackoutStatus {
   const normalized = networks.map(normalizeNetworkName);
-  const nationalNetworks = ['ESPN', 'ABC', 'TNT', 'NBA TV', 'TruTV'];
+  const nationalNetworks = ['ESPN', 'ABC', 'NBC', 'NBA TV'];
   const rsnKeywords = ['FanDuel', 'MSG', 'Bally', 'YES', 'NBC Sports', 'FOX Sports', 'AT&T SportsNet', 'Spectrum', 'Root Sports'];
   
   const hasNational = normalized.some(network => nationalNetworks.includes(network));
@@ -231,7 +227,7 @@ export function getBlackoutStatus(networks: string[], isLeaguePass: boolean): Bl
 
 export function sortNetworks(networks: string[]): string[] {
   // Only nationals and streamers - RSNs filtered out
-  const nationalNetworks = ['ESPN', 'ABC', 'TNT', 'NBA TV', 'TruTV'];
+  const nationalNetworks = ['ESPN', 'ABC', 'NBC', 'NBA TV'];
   const streamingNetworks = ['Peacock', 'Prime Video', 'Max', 'Fubo', 'YouTube TV', 'Apple TV+', 'Netflix'];
   const normalized = networks.map(normalizeNetworkName);
   

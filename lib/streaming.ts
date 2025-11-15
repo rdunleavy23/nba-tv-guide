@@ -15,7 +15,6 @@ export type StreamingPlatformId =
   | 'prime_video'
   | 'nba_tv'
   | 'league_pass'
-  | 'tnt' // Legacy, may still appear in some games
   | 'other'
   | 'info'; // "just info, not a stream"
 
@@ -65,7 +64,6 @@ export function selectPrimaryOption(
     'peacock',
     'prime_video',
     'nba_tv',
-    'tnt', // Legacy
     'league_pass',
     'other',
     'info',
@@ -159,17 +157,6 @@ export function buildStreamingOptions(
         priority: index,
         label: 'NBA TV',
       });
-    } else if (normalized.includes('TNT')) {
-      // Legacy support for TNT (may still appear in some games)
-      options.push({
-        id: 'tnt',
-        kind: 'network',
-        links: {
-          web: 'https://www.tntdrama.com/watchtnt/east',
-        },
-        priority: index,
-        label: 'TNT',
-      });
     }
   });
 
@@ -243,7 +230,6 @@ export function getDefaultPreferences(): UserStreamingPrefs {
       'peacock',
       'prime_video',
       'nba_tv',
-      'tnt',
       'league_pass',
       'other',
       'info',

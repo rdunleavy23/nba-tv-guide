@@ -15,7 +15,7 @@ const TimeZoneContext = createContext<{
   updateMode: (mode: TimeZoneMode) => void;
 }>({
   settings: {
-    mode: 'et',
+    mode: 'local',
     localZone: null,
     displayZone: 'America/New_York',
   },
@@ -32,7 +32,7 @@ interface TimeZoneProviderProps {
 
 export function TimeZoneProvider({ children }: TimeZoneProviderProps) {
   const [settings, setSettings] = useState<TimeZoneSettings>({
-    mode: 'et',
+    mode: 'local',
     localZone: null,
     displayZone: 'America/New_York',
   });
@@ -48,8 +48,8 @@ export function TimeZoneProvider({ children }: TimeZoneProviderProps) {
       setSettings(prev => ({
         ...prev,
         localZone: detectedZone,
-        mode: savedMode || 'et',
-        displayZone: savedMode === 'local' ? detectedZone : 'America/New_York',
+        mode: savedMode || 'local',
+        displayZone: (savedMode === 'et') ? 'America/New_York' : detectedZone,
       }));
     } catch (error) {
       console.error('Failed to detect timezone:', error);
