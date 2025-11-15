@@ -135,16 +135,3 @@ body {
   transition-duration: 200ms;
 }
 
-/* Team logo styling - convert to white/gray monochrome preserving contrast */
-/* Strategy: Convert to grayscale, boost contrast to separate dark/light areas, then invert */
-.team-logo-white svg {
-  /* 
-   * 1. Grayscale: Remove color
-   * 2. Contrast(2.5): Dramatically separate dark and light areas
-   * 3. Brightness(0): Make everything black
-   * 4. Invert(1): Flip to white (dark areas become gray, light areas become white)
-   * 5. Brightness(1.3): Brighten everything slightly
-   */
-  filter: grayscale(100%) contrast(2.5) brightness(0) invert(1) brightness(1.3);
-}
-

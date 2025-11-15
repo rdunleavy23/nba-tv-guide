@@ -1,10 +1,14 @@
 /**
  * NBA Team Logos - using react-nba-logos package
- * All logos are displayed in a consistent, minimalist white style
+ * All logos are displayed in a consistent, minimalist white/gray style
+ * Colors are processed client-side based on luminance to preserve details
  */
 
-import React from 'react';
+'use client';
+
+import React, { useEffect, useRef } from 'react';
 import * as NBALogos from 'react-nba-logos';
+import { processSvgToMonochrome } from './svg-color-processor';
 
 /**
  * Map team abbreviations to react-nba-logos component names
@@ -53,6 +57,28 @@ const TEAM_LOGO_COMPONENTS: Record<string, React.ComponentType<{ size?: number |
 
 export function TeamLogo({ abbr, className = '', size = 24 }: { abbr: string; className?: string; size?: number }) {
   const LogoComponent = TEAM_LOGO_COMPONENTS[abbr.toUpperCase()];
+  const containerRef = useRef<HTMLDivElement>(null);
+  
+  useEffect(() => {
+    if (!containerRef.current) return;
+
+    // Use requestAnimationFrame to ensure SVG is fully rendered
+    const processSvg = () => {
+      const svgElement = containerRef.current?.querySelector('svg');
+      if (svgElement) {
+        // Process the SVG to convert colors to white/gray based on luminance
+        processSvgToMonochrome(svgElement);
+      }
+    };
+
+    // Try immediately first
+    processSvg();
+
+    // Also try after a frame in case the SVG renders asynchronously
+    requestAnimationFrame(() => {
+      processSvg();
+    });
+  }, [abbr, size]); // Re-process if team or size changes
   
   if (!LogoComponent) {
     // Fallback to abbreviation if logo component not found
@@ -72,6 +98,7 @@ export function TeamLogo({ abbr, className = '', size = 24 }: { abbr: string; cl
       }}
     >
       <div
+        ref={containerRef}
         style={{
           width: '100%',
           height: '100%',
@@ -79,7 +106,6 @@ export function TeamLogo({ abbr, className = '', size = 24 }: { abbr: string; cl
           alignItems: 'center',
           justifyContent: 'center',
         }}
-        className="team-logo-white"
       >
         <LogoComponent size={size} />
       </div>
