@@ -135,3 +135,24 @@ body {
   transition-duration: 200ms;
 }
 
+/* Team logo styling - make all SVG elements white while preserving details */
+.team-logo-white svg,
+.team-logo-white svg * {
+  fill: white !important;
+  stroke: white !important;
+  color: white !important;
+}
+
+.team-logo-white svg path,
+.team-logo-white svg circle,
+.team-logo-white svg ellipse,
+.team-logo-white svg rect,
+.team-logo-white svg polygon,
+.team-logo-white svg polyline,
+.team-logo-white svg g path,
+.team-logo-white svg g circle,
+.team-logo-white svg use {
+  fill: white !important;
+  stroke: white !important;
+}
+

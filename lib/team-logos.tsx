@@ -69,18 +69,17 @@ export function TeamLogo({ abbr, className = '', size = 24 }: { abbr: string; cl
       style={{ 
         width: size, 
         height: size,
-        color: 'white',
       }}
     >
       <div
         style={{
-          filter: 'brightness(0) invert(1)',
           width: '100%',
           height: '100%',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
         }}
+        className="team-logo-white"
       >
         <LogoComponent size={size} />
       </div>
