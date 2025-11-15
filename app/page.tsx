@@ -1,11 +1,12 @@
 import { headers } from 'next/headers';
 import { Suspense } from 'react';
-import { AnswerChip, type Game } from '@/components/answer-chip';
+import { AnswerChip, type Game, type GameLink } from '@/components/answer-chip';
 import { SkeletonList } from '@/components/game-skeleton';
 import { ClientWrapper } from '@/components/client-wrapper';
 import { Logo } from '@/components/logo';
 import { DayNavigatorWrapper } from '@/components/day-navigator-wrapper';
 import { SettingsTrigger } from '@/components/settings-trigger';
+import { ErrorFallback } from '@/components/error-fallback';
 import { getServerRegion } from '@/lib/region';
 import { formatGameTime, isGameTonight } from '@/lib/timezone';
 import { Region } from '@/lib/region';
@@ -13,28 +14,28 @@ import { filterToNationalOnly } from '@/lib/national';
 
 export const runtime = 'edge';
 
-// Game row component - clickable to ESPN
+// Game row component - clickable to streaming destination
 function GameRow({ game, region }: { game: Game; region: Region | null }) {
   const timeString = formatGameTime(game.startTimeUtc, 'America/New_York', true);
-  
+
   return (
     <a
-      href={`https://www.espn.com/nba/game/_/gameId/${game.id}`}
+      href={game.primaryLink.url}
       target="_blank"
       rel="noopener noreferrer"
-      className="flex items-center gap-3 px-4 py-3 border-b hover:bg-accent/5 transition-colors"
+      className="flex items-center gap-4 px-4 py-3.5 border-b hover:bg-accent/10 transition-colors cursor-pointer"
     >
-      <div className="w-20 flex-shrink-0">
+      <div className="min-w-[90px] flex-shrink-0">
         <AnswerChip game={game} region={region} />
       </div>
-      
+
       <div className="flex-1 min-w-0">
-        <span className="text-sm font-medium tabular-nums">
+        <span className="text-base md:text-sm font-medium tabular-nums">
           {game.teams.away.abbr} @ {game.teams.home.abbr}
         </span>
       </div>
-      
-      <time className="text-sm text-muted-foreground tabular-nums w-15 text-right">
+
+      <time className="w-20 text-right text-sm tabular-nums text-muted-foreground">
         {timeString}
       </time>
     </a>
@@ -52,12 +53,68 @@ function GameList({ games, region }: { games: Game[]; region: Region | null }) {
   }
 
   return (
-    <ul className="divide-y divide-gray-200 dark:divide-gray-700">
+    <ul>
       {games.map((game) => (
         <GameRow key={game.id} game={game} region={region} />
       ))}
     </ul>
   );
+}
+
+// Helper function to determine the primary streaming link for a game
+function getPrimaryLink(gameId: string, networks: string[], hasLeaguePass: boolean): GameLink {
+  // Priority 1: National network streaming apps
+  if (networks.length > 0) {
+    const network = networks[0].toUpperCase();
+
+    if (network.includes('ESPN')) {
+      return {
+        url: `https://www.espn.com/watch/player/_/id/${gameId}`,
+        target: 'app',
+        source: 'espn',
+      };
+    }
+
+    if (network.includes('TNT')) {
+      return {
+        url: `https://www.tntdrama.com/watchtnt/east`,
+        target: 'app',
+        source: 'tnt',
+      };
+    }
+
+    if (network.includes('ABC')) {
+      return {
+        url: `https://abc.com/watch-live`,
+        target: 'app',
+        source: 'abc',
+      };
+    }
+
+    if (network.includes('NBA TV')) {
+      return {
+        url: `https://www.nba.com/watch/league-pass-stream`,
+        target: 'app',
+        source: 'nba_tv',
+      };
+    }
+  }
+
+  // Priority 2: League Pass
+  if (hasLeaguePass) {
+    return {
+      url: `https://www.nba.com/game/${gameId}`,
+      target: 'app',
+      source: 'league_pass',
+    };
+  }
+
+  // Fallback: ESPN game page (for stats/info)
+  return {
+    url: `https://www.espn.com/nba/game/_/gameId/${gameId}`,
+    target: 'web',
+    source: 'unknown',
+  };
 }
 
 async function fetchTonightGames(): Promise<{ games: Game[]; error?: string }> {
@@ -145,16 +202,20 @@ async function fetchTonightGames(): Promise<{ games: Game[]; error?: string }> {
         }
       }
       
+      const gameId = event.id as string;
+      const primaryLink = getPrimaryLink(gameId, nationalNetworks, isLeaguePass);
+
       return {
-        id: event.id as string,
+        id: gameId,
         startTimeUtc: processedTime,
-        teams: { 
-          away: { abbr: awayAbbr }, 
-          home: { abbr: homeAbbr } 
+        teams: {
+          away: { abbr: awayAbbr },
+          home: { abbr: homeAbbr }
         },
         networks: nationalNetworks,
         allBroadcasts: [...new Set(allBroadcasts)],
         leaguePass: isLeaguePass,
+        primaryLink,
       };
     });
     
@@ -192,35 +253,19 @@ export default async function HomePage() {
         {/* Content */}
         <main className="py-4">
           {error ? (
-            <div className="p-8 text-center">
-              <p className="text-sm text-muted-foreground mb-2">
-                Can&apos;t reach ESPN right now.
-              </p>
-              <button 
-                onClick={() => window.location.reload()}
-                className="text-sm text-primary underline-offset-4 hover:underline"
-              >
-                Try again
-              </button>
-            </div>
+            <ErrorFallback />
           ) : (
             <Suspense fallback={<SkeletonList count={6} />}>
               <GameList games={games} region={region} />
             </Suspense>
           )}
         </main>
-        
+
         {/* Footer */}
         <footer className="py-8 text-center space-y-2">
           <p className="text-xs text-muted-foreground">
-            Updated just now • Data from ESPN
+            Refreshes every 30 seconds • Data from ESPN
           </p>
-          <div className="hidden md:block text-xs text-muted-foreground space-x-2">
-            <kbd className="px-1.5 py-0.5 bg-muted rounded">j/k</kbd>
-            <span>navigate</span>
-            <kbd className="px-1.5 py-0.5 bg-muted rounded">,</kbd>
-            <span>settings</span>
-          </div>
           <SettingsTrigger />
         </footer>
       </div>

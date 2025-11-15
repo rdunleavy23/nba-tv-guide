@@ -135,38 +135,3 @@ body {
   transition-duration: 200ms;
 }
 
-/* Badge hover states */
-.badge-national:hover {
-  transform: scale(1.02);
-  transition: transform 0.1s ease-out;
-}
-
-.badge-lp-available:hover {
-  opacity: 0.9;
-  transition: opacity 0.1s ease-out;
-}
-
-/* Badge variants with neutral colors */
-.badge-national {
-  background-color: var(--primary);
-  color: var(--primary-foreground);
-  border: none;
-}
-
-.badge-lp-available {
-  background-color: #475569; /* slate-600 */
-  color: white;
-  border: none;
-}
-
-.badge-lp-blackout {
-  background-color: transparent;
-  color: #94a3b8; /* slate-400 */
-  border: 1px solid #94a3b8;
-}
-
-.badge-lp-unknown {
-  background-color: transparent;
-  color: #64748b; /* slate-500 */
-  border: 1px solid #64748b;
-}
