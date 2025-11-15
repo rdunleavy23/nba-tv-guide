@@ -1,53 +1,66 @@
 /**
  * National network detection and normalization
- * Handles ESPN split names, case-insensitive matching, and NBA TV precedence
+ * Handles all NBA broadcast partners: ESPN, ABC, NBC, Peacock, Prime Video, NBA TV
  */
 
-export const NATIONAL_NETWORKS = ['ABC', 'ESPN', 'ESPN2', 'TNT', 'NBA TV'] as const;
+export const NATIONAL_NETWORKS = [
+  'ABC',
+  'ESPN',
+  'ESPN2',
+  'NBC',
+  'Peacock',
+  'Prime Video',
+  'NBA TV',
+] as const;
 
 export type NationalNetwork = typeof NATIONAL_NETWORKS[number];
 
 /**
  * Normalize network name for consistent matching
- * Handles ESPN split names ("ESPN/ESPN2" → "ESPN"), ignores "ESPN Deportes"
+ * Handles variations like "Amazon Prime Video" → "Prime Video", "NBCSN" → "NBC"
  */
 export function normalizeNetworkName(name: string): string {
   if (!name) return '';
-  
+
   const normalized = name.toLowerCase().trim();
-  
+
   // Handle ESPN split names
   if (normalized.includes('espn/espn2') || normalized.includes('espn2/espn')) {
     return 'ESPN';
   }
-  
+
   // Ignore ESPN Deportes and other variants
   if (normalized.includes('deportes') || normalized.includes('radio')) {
     return '';
   }
-  
+
   // Map common variations to canonical names
   const mappings: Record<string, string> = {
     'espn': 'ESPN',
-    'espn2': 'ESPN2', 
+    'espn2': 'ESPN2',
     'abc': 'ABC',
-    'tnt': 'TNT',
+    'nbc': 'NBC',
+    'nbcsn': 'NBC',
+    'peacock': 'Peacock',
+    'amazon prime video': 'Prime Video',
+    'amazon prime': 'Prime Video',
+    'prime video': 'Prime Video',
+    'prime': 'Prime Video',
     'nba tv': 'NBA TV',
     'nbatv': 'NBA TV',
     'nba-tv': 'NBA TV',
   };
-  
+
   return mappings[normalized] || '';
 }
 
 /**
  * Get the first national network from a list of networks
  * Returns null if no national network found
- * NBA TV is treated as national (displaces LP chips)
  */
 export function getNationalNetwork(networks: string[]): NationalNetwork | null {
   if (!networks || networks.length === 0) return null;
-  
+
   // Normalize all networks and find first national match
   for (const network of networks) {
     const normalized = normalizeNetworkName(network);
@@ -55,7 +68,7 @@ export function getNationalNetwork(networks: string[]): NationalNetwork | null {
       return normalized as NationalNetwork;
     }
   }
-  
+
   return null;
 }
 
@@ -73,13 +86,13 @@ export function isNationalNetwork(network: string): boolean {
  */
 export function filterToNationalOnly(networks: string[]): NationalNetwork[] {
   const result: NationalNetwork[] = [];
-  
+
   for (const network of networks) {
     const normalized = normalizeNetworkName(network);
     if (normalized && NATIONAL_NETWORKS.includes(normalized as NationalNetwork)) {
       result.push(normalized as NationalNetwork);
     }
   }
-  
+
   return result;
 }

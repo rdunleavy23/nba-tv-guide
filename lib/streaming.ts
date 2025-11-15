@@ -9,11 +9,13 @@
 
 export type StreamingPlatformId =
   | 'espn'
-  | 'tnt'
   | 'abc'
+  | 'nbc'
+  | 'peacock'
+  | 'prime_video'
   | 'nba_tv'
   | 'league_pass'
-  | 'prime_video'
+  | 'tnt' // Legacy, may still appear in some games
   | 'other'
   | 'info'; // "just info, not a stream"
 
@@ -36,7 +38,7 @@ export interface StreamingOption {
 
 export interface UserStreamingPrefs {
   preferredOrder: StreamingPlatformId[];
-  // e.g. ['league_pass', 'espn', 'tnt', 'abc', 'nba_tv', 'info']
+  // e.g. ['league_pass', 'espn', 'abc', 'nbc', 'peacock', 'prime_video', 'nba_tv', 'info']
   preferLocalTime: boolean; // for timezone
   preferNetworkApps: boolean; // future: tweak within same game
 }
@@ -55,14 +57,16 @@ export function selectPrimaryOption(
     throw new Error('No streaming options available');
   }
 
-  // Default order: national networks first, then League Pass, then info
+  // Default order: current NBA broadcast partners (2024-25 season)
   const defaultOrder: StreamingPlatformId[] = [
     'espn',
-    'tnt',
     'abc',
-    'nba_tv',
-    'league_pass',
+    'nbc',
+    'peacock',
     'prime_video',
+    'nba_tv',
+    'tnt', // Legacy
+    'league_pass',
     'other',
     'info',
   ];
@@ -105,16 +109,6 @@ export function buildStreamingOptions(
         priority: index,
         label: 'ESPN',
       });
-    } else if (normalized.includes('TNT')) {
-      options.push({
-        id: 'tnt',
-        kind: 'network',
-        links: {
-          web: 'https://www.tntdrama.com/watchtnt/east',
-        },
-        priority: index,
-        label: 'TNT',
-      });
     } else if (normalized.includes('ABC')) {
       options.push({
         id: 'abc',
@@ -125,6 +119,36 @@ export function buildStreamingOptions(
         priority: index,
         label: 'ABC',
       });
+    } else if (normalized.includes('NBC')) {
+      options.push({
+        id: 'nbc',
+        kind: 'network',
+        links: {
+          web: 'https://www.nbc.com/live',
+        },
+        priority: index,
+        label: 'NBC',
+      });
+    } else if (normalized.includes('PEACOCK')) {
+      options.push({
+        id: 'peacock',
+        kind: 'ott',
+        links: {
+          web: 'https://www.peacocktv.com/sports/nba',
+        },
+        priority: index,
+        label: 'Peacock',
+      });
+    } else if (normalized.includes('PRIME VIDEO') || normalized.includes('AMAZON')) {
+      options.push({
+        id: 'prime_video',
+        kind: 'ott',
+        links: {
+          web: 'https://www.amazon.com/gp/video/storefront/ref=atv_nb_live',
+        },
+        priority: index,
+        label: 'Prime Video',
+      });
     } else if (normalized.includes('NBA TV')) {
       options.push({
         id: 'nba_tv',
@@ -134,6 +158,17 @@ export function buildStreamingOptions(
         },
         priority: index,
         label: 'NBA TV',
+      });
+    } else if (normalized.includes('TNT')) {
+      // Legacy support for TNT (may still appear in some games)
+      options.push({
+        id: 'tnt',
+        kind: 'network',
+        links: {
+          web: 'https://www.tntdrama.com/watchtnt/east',
+        },
+        priority: index,
+        label: 'TNT',
       });
     }
   });
@@ -203,11 +238,13 @@ export function getDefaultPreferences(): UserStreamingPrefs {
   return {
     preferredOrder: [
       'espn',
-      'tnt',
       'abc',
-      'nba_tv',
-      'league_pass',
+      'nbc',
+      'peacock',
       'prime_video',
+      'nba_tv',
+      'tnt',
+      'league_pass',
       'other',
       'info',
     ],
