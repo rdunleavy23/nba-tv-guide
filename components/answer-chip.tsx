@@ -1,7 +1,5 @@
 import { Badge } from '@/components/ui/badge';
 import { Play, Info } from 'lucide-react';
-import { lpAvailableForUser } from '@/lib/blackout';
-import { Region } from '@/lib/region';
 import { StreamingOption } from '@/lib/streaming';
 
 export interface Game {
@@ -9,7 +7,6 @@ export interface Game {
   startTimeUtc: string;
   teams: { away: { abbr: string }, home: { abbr: string } };
   networks: string[]; // national only for UI
-  allBroadcasts: string[]; // includes RSNs for internal blackout calc
   leaguePass: boolean;
   streamingOptions: StreamingOption[];
   primaryLink: StreamingOption;
@@ -17,7 +14,6 @@ export interface Game {
 
 interface AnswerChipProps {
   game: Game;
-  region: Region | null;
 }
 
 /**
@@ -36,34 +32,13 @@ function PlatformIcon({ kind }: { kind: StreamingOption['kind'] }) {
  *
  * Logic:
  * - Uses the primaryLink selected by the streaming system
- * - For League Pass games, checks blackout status and adjusts label
- * - All badges use neutral colors - no green/red to avoid implying preference
+ * - Shows platform name without blackout detection
+ * - All badges use neutral colors
  */
-export function AnswerChip({ game, region }: AnswerChipProps) {
+export function AnswerChip({ game }: AnswerChipProps) {
   const primaryLink = game.primaryLink;
-  let label = primaryLink.label;
-  let ariaLabel = `Watch on ${label}`;
-
-  // If this is League Pass, check blackout status and adjust label
-  if (primaryLink.id === 'league_pass' && game.leaguePass) {
-    const lpStatus = lpAvailableForUser(region, game);
-
-    switch (lpStatus) {
-      case 'available':
-        label = 'LP';
-        ariaLabel = 'Available on League Pass';
-        break;
-      case 'blackout':
-        label = 'LP blackout';
-        ariaLabel = 'League Pass blacked out in your area';
-        break;
-      case 'unknown':
-      default:
-        label = 'LP';
-        ariaLabel = 'League Pass availability unknown';
-        break;
-    }
-  }
+  const label = primaryLink.label;
+  const ariaLabel = `Watch on ${label}`;
 
   return (
     <Badge

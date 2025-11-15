@@ -1,4 +1,3 @@
-import { headers } from 'next/headers';
 import { Suspense } from 'react';
 import { AnswerChip, type Game } from '@/components/answer-chip';
 import { SkeletonList } from '@/components/game-skeleton';
@@ -9,9 +8,7 @@ import { SettingsTrigger } from '@/components/settings-trigger';
 import { ErrorFallback } from '@/components/error-fallback';
 import { TeamGlyph } from '@/components/team-glyph';
 import { GameTime } from '@/components/game-time';
-import { getServerRegion } from '@/lib/region';
 import { isGameTonight } from '@/lib/timezone';
-import { Region } from '@/lib/region';
 import { filterToNationalOnly } from '@/lib/national';
 import { buildStreamingOptions, selectPrimaryOption } from '@/lib/streaming';
 import { ExternalLink } from 'lucide-react';
@@ -19,7 +16,7 @@ import { ExternalLink } from 'lucide-react';
 export const runtime = 'edge';
 
 // Game row component - clickable to streaming destination
-function GameRow({ game, region }: { game: Game; region: Region | null }) {
+function GameRow({ game }: { game: Game }) {
   return (
     <a
       href={game.primaryLink.links.web}
@@ -28,7 +25,7 @@ function GameRow({ game, region }: { game: Game; region: Region | null }) {
       className="group flex items-center gap-4 px-4 py-3.5 border-b hover:bg-accent/10 transition-colors cursor-pointer"
     >
       <div className="min-w-[90px] flex-shrink-0">
-        <AnswerChip game={game} region={region} />
+        <AnswerChip game={game} />
       </div>
 
       <div className="flex-1 min-w-0 flex items-center gap-2">
@@ -51,7 +48,7 @@ function GameRow({ game, region }: { game: Game; region: Region | null }) {
 }
 
 // Game list component
-function GameList({ games, region }: { games: Game[]; region: Region | null }) {
+function GameList({ games }: { games: Game[] }) {
   if (games.length === 0) {
     return (
       <div className="p-8 text-center text-muted-foreground text-sm">
@@ -63,7 +60,7 @@ function GameList({ games, region }: { games: Game[]; region: Region | null }) {
   return (
     <ul>
       {games.map((game) => (
-        <GameRow key={game.id} game={game} region={region} />
+        <GameRow key={game.id} game={game} />
       ))}
     </ul>
   );
@@ -95,24 +92,24 @@ async function fetchTonightGames(): Promise<{ games: Game[]; error?: string }> {
       const homeTeam = competitors.find((c: Record<string, unknown>) => c.homeAway === 'home');
       const awayTeam = competitors.find((c: Record<string, unknown>) => c.homeAway === 'away');
 
-      // Collect ALL broadcasts (including RSNs for internal blackout calc)
-      const allBroadcasts: string[] = [];
+      // Collect broadcasts for national networks
+      const broadcasts: string[] = [];
       if (competition?.broadcasts) {
         (competition.broadcasts as Record<string, unknown>[]).forEach((broadcast: Record<string, unknown>) => {
           if (broadcast.names && Array.isArray(broadcast.names)) {
-            allBroadcasts.push(...(broadcast.names as string[]));
+            broadcasts.push(...(broadcast.names as string[]));
           } else if (broadcast.name && typeof broadcast.name === 'string') {
-            allBroadcasts.push(broadcast.name);
+            broadcasts.push(broadcast.name);
           } else if (broadcast.shortName && typeof broadcast.shortName === 'string') {
-            allBroadcasts.push(broadcast.shortName);
+            broadcasts.push(broadcast.shortName);
           } else if (broadcast.callSign && typeof broadcast.callSign === 'string') {
-            allBroadcasts.push(broadcast.callSign);
+            broadcasts.push(broadcast.callSign);
           }
         });
       }
 
-      // Filter to national networks only for UI (strip RSNs)
-      const nationalNetworks = filterToNationalOnly(allBroadcasts);
+      // Filter to national networks only
+      const nationalNetworks = filterToNationalOnly(broadcasts);
 
       const isLeaguePass = (competition?.flags as string[])?.includes('league-pass') || false;
 
@@ -170,7 +167,6 @@ async function fetchTonightGames(): Promise<{ games: Game[]; error?: string }> {
           home: { abbr: homeAbbr }
         },
         networks: nationalNetworks,
-        allBroadcasts: [...new Set(allBroadcasts)],
         leaguePass: isLeaguePass,
         streamingOptions,
         primaryLink,
@@ -193,8 +189,6 @@ async function fetchTonightGames(): Promise<{ games: Game[]; error?: string }> {
 }
 
 export default async function HomePage() {
-  const headersList = await headers();
-  const region = getServerRegion(headersList);
   const { games, error } = await fetchTonightGames();
 
   return (
@@ -214,7 +208,7 @@ export default async function HomePage() {
             <ErrorFallback />
           ) : (
             <Suspense fallback={<SkeletonList count={6} />}>
-              <GameList games={games} region={region} />
+              <GameList games={games} />
             </Suspense>
           )}
         </main>
