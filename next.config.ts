@@ -4,6 +4,17 @@ const nextConfig: NextConfig = {
   // Performance optimizations
   compress: true, // Enable Brotli compression
   
+  // Image configuration for external domains
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'a.espncdn.com',
+        pathname: '/i/teamlogos/**',
+      },
+    ],
+  },
+  
   // Experimental features for better performance
   experimental: {
     optimizePackageImports: ['zustand'],
