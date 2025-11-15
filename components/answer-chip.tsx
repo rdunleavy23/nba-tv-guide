@@ -50,7 +50,7 @@ export function AnswerChip({ game, region }: AnswerChipProps) {
 
     switch (lpStatus) {
       case 'available':
-        label = 'League Pass';
+        label = 'LP';
         ariaLabel = 'Available on League Pass';
         break;
       case 'blackout':
@@ -59,7 +59,7 @@ export function AnswerChip({ game, region }: AnswerChipProps) {
         break;
       case 'unknown':
       default:
-        label = 'League Pass';
+        label = 'LP';
         ariaLabel = 'League Pass availability unknown';
         break;
     }

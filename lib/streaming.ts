@@ -147,7 +147,7 @@ export function buildStreamingOptions(
           web: 'https://www.amazon.com/gp/video/storefront/ref=atv_nb_live',
         },
         priority: index,
-        label: 'Prime Video',
+        label: 'Prime',
       });
     } else if (normalized.includes('NBA TV')) {
       options.push({
@@ -182,7 +182,7 @@ export function buildStreamingOptions(
         web: `https://www.nba.com/game/${gameId}`,
       },
       priority: networks.length, // After all networks
-      label: 'League Pass',
+      label: 'LP',
     });
   }
 
