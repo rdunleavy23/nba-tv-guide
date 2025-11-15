@@ -40,55 +40,70 @@ export function formatGameTime(
 }
 
 /**
- * Get "tonight" boundaries in user's local timezone
- * Returns start and end timestamps for 3:59:59 AM – 11:59:59 PM local
+ * Get today's date string in the target timezone (YYYY-MM-DD)
+ */
+function getTodayInTimezone(timezone: string): string {
+  const now = new Date();
+  const formatter = new Intl.DateTimeFormat('en-CA', {
+    timeZone: timezone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  });
+  return formatter.format(now); // Returns YYYY-MM-DD
+}
+
+/**
+ * Get a date's date string in the target timezone (YYYY-MM-DD)
+ */
+function getDateInTimezone(date: Date, timezone: string): string {
+  const formatter = new Intl.DateTimeFormat('en-CA', {
+    timeZone: timezone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  });
+  return formatter.format(date); // Returns YYYY-MM-DD
+}
+
+/**
+ * Check if a game time falls within "tonight" in the target timezone
+ * "Tonight" means any game that occurs on today's calendar date in that timezone
+ */
+export function isGameTonight(
+  gameTimeUtc: string,
+  timezone: string = 'America/New_York'
+): boolean {
+  try {
+    const gameTime = new Date(gameTimeUtc);
+    if (isNaN(gameTime.getTime())) {
+      return false;
+    }
+
+    const todayInTZ = getTodayInTimezone(timezone);
+    const gameDateInTZ = getDateInTimezone(gameTime, timezone);
+
+    return todayInTZ === gameDateInTZ;
+  } catch (error) {
+    console.warn('Error checking if game is tonight:', error);
+    return false;
+  }
+}
+
+/**
+ * DEPRECATED: Use isGameTonight instead
+ * Get "tonight" boundaries in a specific timezone
  */
 export function getTonightBoundaries(timezone: string = 'America/New_York'): {
   start: string;
   end: string;
 } {
-  const now = new Date();
-  
-  // Get today's date in the user's timezone
-  const today = new Intl.DateTimeFormat('en-CA', { 
-    timeZone: timezone,
-    year: 'numeric',
-    month: '2-digit', 
-    day: '2-digit'
-  }).format(now);
-  
-  // Create start time: 3:59:59 AM local
-  const startTime = new Date(`${today}T03:59:59`);
-  const startUtc = new Date(startTime.toLocaleString('en-US', { timeZone: timezone }));
-  
-  // Create end time: 11:59:59 PM local  
-  const endTime = new Date(`${today}T23:59:59`);
-  const endUtc = new Date(endTime.toLocaleString('en-US', { timeZone: timezone }));
-  
+  // Simplified: just return a 24-hour window for today
+  const today = getTodayInTimezone(timezone);
   return {
-    start: startUtc.toISOString(),
-    end: endUtc.toISOString(),
+    start: `${today}T00:00:00.000Z`,
+    end: `${today}T23:59:59.999Z`,
   };
-}
-
-/**
- * Check if a game time falls within "tonight" boundaries
- */
-export function isGameTonight(
-  gameTimeUtc: string, 
-  timezone: string = 'America/New_York'
-): boolean {
-  try {
-    const gameTime = new Date(gameTimeUtc);
-    const boundaries = getTonightBoundaries(timezone);
-    const start = new Date(boundaries.start);
-    const end = new Date(boundaries.end);
-    
-    return gameTime >= start && gameTime <= end;
-  } catch (error) {
-    console.warn('Error checking if game is tonight:', error);
-    return false;
-  }
 }
 
 /**
