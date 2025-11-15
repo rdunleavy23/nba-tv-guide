@@ -40,51 +40,43 @@ export function formatGameTime(
 }
 
 /**
- * Get "tonight" boundaries in user's local timezone
- * Returns start and end timestamps for 3:59:59 AM – 11:59:59 PM local
+ * Get today's date string in the specified timezone (YYYY-MM-DD format)
  */
-export function getTonightBoundaries(timezone: string = 'America/New_York'): {
-  start: string;
-  end: string;
-} {
+function getTodayInTimezone(timezone: string = 'America/New_York'): string {
   const now = new Date();
-  
-  // Get today's date in the user's timezone
-  const today = new Intl.DateTimeFormat('en-CA', { 
+  return new Intl.DateTimeFormat('en-CA', {
     timeZone: timezone,
     year: 'numeric',
-    month: '2-digit', 
+    month: '2-digit',
     day: '2-digit'
   }).format(now);
-  
-  // Create start time: 3:59:59 AM local
-  const startTime = new Date(`${today}T03:59:59`);
-  const startUtc = new Date(startTime.toLocaleString('en-US', { timeZone: timezone }));
-  
-  // Create end time: 11:59:59 PM local  
-  const endTime = new Date(`${today}T23:59:59`);
-  const endUtc = new Date(endTime.toLocaleString('en-US', { timeZone: timezone }));
-  
-  return {
-    start: startUtc.toISOString(),
-    end: endUtc.toISOString(),
-  };
 }
 
 /**
- * Check if a game time falls within "tonight" boundaries
+ * Get the date string for a UTC time in the specified timezone (YYYY-MM-DD format)
+ */
+function getDateInTimezone(utcTimeString: string, timezone: string = 'America/New_York'): string {
+  const date = new Date(utcTimeString);
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: timezone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  }).format(date);
+}
+
+/**
+ * Check if a game time falls on today's date in the specified timezone
+ * Uses simple date string comparison - correct and reliable
  */
 export function isGameTonight(
   gameTimeUtc: string, 
   timezone: string = 'America/New_York'
 ): boolean {
   try {
-    const gameTime = new Date(gameTimeUtc);
-    const boundaries = getTonightBoundaries(timezone);
-    const start = new Date(boundaries.start);
-    const end = new Date(boundaries.end);
-    
-    return gameTime >= start && gameTime <= end;
+    const todayInTZ = getTodayInTimezone(timezone);
+    const gameDateInTZ = getDateInTimezone(gameTimeUtc, timezone);
+    return todayInTZ === gameDateInTZ;
   } catch (error) {
     console.warn('Error checking if game is tonight:', error);
     return false;
