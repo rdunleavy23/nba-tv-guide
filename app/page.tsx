@@ -9,7 +9,7 @@ import { SettingsTrigger } from '@/components/settings-trigger';
 import { ErrorFallback } from '@/components/error-fallback';
 import { TeamGlyph } from '@/components/team-glyph';
 import { GameTime } from '@/components/game-time';
-import { isGameTonight } from '@/lib/timezone';
+import { isGameTonight, getTodayForEspnApi } from '@/lib/timezone';
 import { filterToNationalOnly } from '@/lib/national';
 import { buildStreamingOptions, selectPrimaryOption } from '@/lib/streaming';
 import { ExternalLink } from 'lucide-react';
@@ -69,7 +69,8 @@ function GameList({ games }: { games: Game[] }) {
 
 async function fetchTonightGames(): Promise<{ games: Game[]; error?: string }> {
   try {
-    const date = new Date().toISOString().split('T')[0].replace(/-/g, '');
+    // Use Eastern Time date for ESPN API to match the "tonight" filter
+    const date = getTodayForEspnApi('America/New_York');
     const espnUrl = `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates=${date}`;
 
     const response = await fetch(espnUrl, {

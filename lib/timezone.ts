@@ -53,6 +53,14 @@ function getTodayInTimezone(timezone: string = 'America/New_York'): string {
 }
 
 /**
+ * Get today's date string in the specified timezone for ESPN API (YYYYMMDD format)
+ */
+export function getTodayForEspnApi(timezone: string = 'America/New_York'): string {
+  const today = getTodayInTimezone(timezone);
+  return today.replace(/-/g, '');
+}
+
+/**
  * Get the date string for a UTC time in the specified timezone (YYYY-MM-DD format)
  */
 function getDateInTimezone(utcTimeString: string, timezone: string = 'America/New_York'): string {
