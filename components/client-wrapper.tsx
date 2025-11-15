@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { SettingsDialog } from '@/components/settings-dialog';
+import { TimeZoneProvider } from '@/components/timezone-provider';
 
 interface ClientWrapperProps {
   children: React.ReactNode;
@@ -18,18 +19,18 @@ export function ClientWrapper({ children }: ClientWrapperProps) {
         setIsSettingsOpen(true);
       }
     };
-    
+
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
   }, []);
 
   return (
-    <>
+    <TimeZoneProvider>
       {children}
-      <SettingsDialog 
-        open={isSettingsOpen} 
-        onOpenChange={setIsSettingsOpen} 
+      <SettingsDialog
+        open={isSettingsOpen}
+        onOpenChange={setIsSettingsOpen}
       />
-    </>
+    </TimeZoneProvider>
   );
 }

@@ -1,43 +1,51 @@
 import { headers } from 'next/headers';
 import { Suspense } from 'react';
-import { AnswerChip, type Game, type GameLink } from '@/components/answer-chip';
+import { AnswerChip, type Game } from '@/components/answer-chip';
 import { SkeletonList } from '@/components/game-skeleton';
 import { ClientWrapper } from '@/components/client-wrapper';
 import { Logo } from '@/components/logo';
 import { DayNavigatorWrapper } from '@/components/day-navigator-wrapper';
 import { SettingsTrigger } from '@/components/settings-trigger';
 import { ErrorFallback } from '@/components/error-fallback';
+import { TeamGlyph } from '@/components/team-glyph';
+import { GameTime } from '@/components/game-time';
 import { getServerRegion } from '@/lib/region';
-import { formatGameTime, isGameTonight } from '@/lib/timezone';
+import { isGameTonight } from '@/lib/timezone';
 import { Region } from '@/lib/region';
 import { filterToNationalOnly } from '@/lib/national';
+import { buildStreamingOptions, selectPrimaryOption } from '@/lib/streaming';
+import { ExternalLink } from 'lucide-react';
 
 export const runtime = 'edge';
 
 // Game row component - clickable to streaming destination
 function GameRow({ game, region }: { game: Game; region: Region | null }) {
-  const timeString = formatGameTime(game.startTimeUtc, 'America/New_York', true);
-
   return (
     <a
-      href={game.primaryLink.url}
+      href={game.primaryLink.links.web}
       target="_blank"
       rel="noopener noreferrer"
-      className="flex items-center gap-4 px-4 py-3.5 border-b hover:bg-accent/10 transition-colors cursor-pointer"
+      className="group flex items-center gap-4 px-4 py-3.5 border-b hover:bg-accent/10 transition-colors cursor-pointer"
     >
       <div className="min-w-[90px] flex-shrink-0">
         <AnswerChip game={game} region={region} />
       </div>
 
-      <div className="flex-1 min-w-0">
+      <div className="flex-1 min-w-0 flex items-center gap-2">
+        <TeamGlyph abbr={game.teams.away.abbr} />
         <span className="text-base md:text-sm font-medium tabular-nums">
           {game.teams.away.abbr} @ {game.teams.home.abbr}
         </span>
+        <TeamGlyph abbr={game.teams.home.abbr} />
       </div>
 
-      <time className="w-20 text-right text-sm tabular-nums text-muted-foreground">
-        {timeString}
-      </time>
+      <div className="flex items-center gap-2">
+        <GameTime
+          utcTime={game.startTimeUtc}
+          className="w-20 text-right text-sm tabular-nums text-muted-foreground"
+        />
+        <ExternalLink className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" aria-hidden="true" />
+      </div>
     </a>
   );
 }
@@ -61,88 +69,32 @@ function GameList({ games, region }: { games: Game[]; region: Region | null }) {
   );
 }
 
-// Helper function to determine the primary streaming link for a game
-function getPrimaryLink(gameId: string, networks: string[], hasLeaguePass: boolean): GameLink {
-  // Priority 1: National network streaming apps
-  if (networks.length > 0) {
-    const network = networks[0].toUpperCase();
-
-    if (network.includes('ESPN')) {
-      return {
-        url: `https://www.espn.com/watch/player/_/id/${gameId}`,
-        target: 'app',
-        source: 'espn',
-      };
-    }
-
-    if (network.includes('TNT')) {
-      return {
-        url: `https://www.tntdrama.com/watchtnt/east`,
-        target: 'app',
-        source: 'tnt',
-      };
-    }
-
-    if (network.includes('ABC')) {
-      return {
-        url: `https://abc.com/watch-live`,
-        target: 'app',
-        source: 'abc',
-      };
-    }
-
-    if (network.includes('NBA TV')) {
-      return {
-        url: `https://www.nba.com/watch/league-pass-stream`,
-        target: 'app',
-        source: 'nba_tv',
-      };
-    }
-  }
-
-  // Priority 2: League Pass
-  if (hasLeaguePass) {
-    return {
-      url: `https://www.nba.com/game/${gameId}`,
-      target: 'app',
-      source: 'league_pass',
-    };
-  }
-
-  // Fallback: ESPN game page (for stats/info)
-  return {
-    url: `https://www.espn.com/nba/game/_/gameId/${gameId}`,
-    target: 'web',
-    source: 'unknown',
-  };
-}
-
 async function fetchTonightGames(): Promise<{ games: Game[]; error?: string }> {
   try {
     const date = new Date().toISOString().split('T')[0].replace(/-/g, '');
     const espnUrl = `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates=${date}`;
-    
+
     const response = await fetch(espnUrl, {
       next: { revalidate: 30 },
       headers: {
         'User-Agent': 'NBA Tonight/1.0',
       },
     });
-    
+
     if (!response.ok) {
       throw new Error(`ESPN API error: ${response.status}`);
     }
-    
+
     const data = await response.json();
     const events = data.events || [];
-    
+
     const games: Game[] = events.map((event: Record<string, unknown>) => {
       const competition = (event.competitions as Record<string, unknown>[])?.[0];
       const competitors = (competition?.competitors as Record<string, unknown>[]) || [];
-      
+
       const homeTeam = competitors.find((c: Record<string, unknown>) => c.homeAway === 'home');
       const awayTeam = competitors.find((c: Record<string, unknown>) => c.homeAway === 'away');
-      
+
       // Collect ALL broadcasts (including RSNs for internal blackout calc)
       const allBroadcasts: string[] = [];
       if (competition?.broadcasts) {
@@ -158,39 +110,39 @@ async function fetchTonightGames(): Promise<{ games: Game[]; error?: string }> {
           }
         });
       }
-      
+
       // Filter to national networks only for UI (strip RSNs)
       const nationalNetworks = filterToNationalOnly(allBroadcasts);
-      
+
       const isLeaguePass = (competition?.flags as string[])?.includes('league-pass') || false;
-      
+
       // Defensive team data extraction
-      const homeTeamName = homeTeam?.team ? 
-        ((homeTeam.team as Record<string, unknown>)?.displayName as string) || 
-        ((homeTeam.team as Record<string, unknown>)?.name as string) || 
-        ((homeTeam.team as Record<string, unknown>)?.shortDisplayName as string) || 
+      const homeTeamName = homeTeam?.team ?
+        ((homeTeam.team as Record<string, unknown>)?.displayName as string) ||
+        ((homeTeam.team as Record<string, unknown>)?.name as string) ||
+        ((homeTeam.team as Record<string, unknown>)?.shortDisplayName as string) ||
         'Unknown' : 'Unknown';
-        
-      const awayTeamName = awayTeam?.team ? 
-        ((awayTeam.team as Record<string, unknown>)?.displayName as string) || 
-        ((awayTeam.team as Record<string, unknown>)?.name as string) || 
-        ((awayTeam.team as Record<string, unknown>)?.shortDisplayName as string) || 
+
+      const awayTeamName = awayTeam?.team ?
+        ((awayTeam.team as Record<string, unknown>)?.displayName as string) ||
+        ((awayTeam.team as Record<string, unknown>)?.name as string) ||
+        ((awayTeam.team as Record<string, unknown>)?.shortDisplayName as string) ||
         'Unknown' : 'Unknown';
-        
-      const homeAbbr = homeTeam?.team ? 
-        ((homeTeam.team as Record<string, unknown>)?.abbreviation as string) || 
-        ((homeTeam.team as Record<string, unknown>)?.shortName as string) || 
+
+      const homeAbbr = homeTeam?.team ?
+        ((homeTeam.team as Record<string, unknown>)?.abbreviation as string) ||
+        ((homeTeam.team as Record<string, unknown>)?.shortName as string) ||
         homeTeamName.substring(0, 3).toUpperCase() : 'UNK';
-        
-      const awayAbbr = awayTeam?.team ? 
-        ((awayTeam.team as Record<string, unknown>)?.abbreviation as string) || 
-        ((awayTeam.team as Record<string, unknown>)?.shortName as string) || 
+
+      const awayAbbr = awayTeam?.team ?
+        ((awayTeam.team as Record<string, unknown>)?.abbreviation as string) ||
+        ((awayTeam.team as Record<string, unknown>)?.shortName as string) ||
         awayTeamName.substring(0, 3).toUpperCase() : 'UNK';
-      
+
       // Validate and process game time
       const rawTime = event.date as string;
       let processedTime = rawTime;
-      
+
       if (!rawTime || typeof rawTime !== 'string') {
         console.warn('Missing or invalid game time for game:', event.id);
         processedTime = new Date().toISOString();
@@ -201,9 +153,14 @@ async function fetchTonightGames(): Promise<{ games: Game[]; error?: string }> {
           processedTime = new Date().toISOString();
         }
       }
-      
+
       const gameId = event.id as string;
-      const primaryLink = getPrimaryLink(gameId, nationalNetworks, isLeaguePass);
+
+      // Build all streaming options for this game
+      const streamingOptions = buildStreamingOptions(gameId, nationalNetworks, isLeaguePass);
+
+      // Select the primary option (can later incorporate user prefs from cookie)
+      const primaryLink = selectPrimaryOption(streamingOptions, null);
 
       return {
         id: gameId,
@@ -215,21 +172,22 @@ async function fetchTonightGames(): Promise<{ games: Game[]; error?: string }> {
         networks: nationalNetworks,
         allBroadcasts: [...new Set(allBroadcasts)],
         leaguePass: isLeaguePass,
+        streamingOptions,
         primaryLink,
       };
     });
-    
+
     // Filter to tonight only
-    const tonightGames = games.filter((game: Game) => 
+    const tonightGames = games.filter((game: Game) =>
       isGameTonight(game.startTimeUtc, 'America/New_York')
     );
-    
+
     return { games: tonightGames };
   } catch (error) {
     console.error('Error fetching games:', error);
-    return { 
-      games: [], 
-      error: error instanceof Error ? error.message : 'Failed to load games' 
+    return {
+      games: [],
+      error: error instanceof Error ? error.message : 'Failed to load games'
     };
   }
 }
