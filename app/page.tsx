@@ -42,8 +42,8 @@ function GameRow({ game }: { game: Game }) {
         className="w-20 flex-shrink-0 text-right text-sm tabular-nums text-muted-foreground"
       />
 
-      {/* 3. AVAILABILITY - Action option */}
-      <div className="flex-shrink-0">
+      {/* 3. AVAILABILITY - Action option (fixed width for alignment) */}
+      <div className="w-24 flex-shrink-0 flex justify-end">
         <AnswerChip game={game} />
       </div>
 
