@@ -12,6 +12,7 @@ import type {
   StreamingOption,
   UserStreamingPrefs,
 } from './streaming-types';
+import { getDisplayName } from './network-display-names';
 
 /**
  * Map a normalized network name to its StreamingPlatformId
@@ -50,7 +51,7 @@ function makeOptionForPlatform(
     case 'espn':
       return {
         id,
-        label: 'ESPN',
+        label: getDisplayName('ESPN'),
         kind: 'network',
         links: {
           web: `https://www.espn.com/nba/game/_/gameId/${espnGameId}`,
@@ -60,7 +61,7 @@ function makeOptionForPlatform(
     case 'abc':
       return {
         id,
-        label: 'ABC',
+        label: getDisplayName('ABC'),
         kind: 'network',
         links: {
           web: 'https://abc.com/watch-live',
@@ -70,7 +71,7 @@ function makeOptionForPlatform(
     case 'nbc':
       return {
         id,
-        label: 'NBC',
+        label: getDisplayName('NBC'),
         kind: 'network',
         links: {
           web: 'https://www.nbc.com/live',
@@ -80,7 +81,7 @@ function makeOptionForPlatform(
     case 'peacock':
       return {
         id,
-        label: 'Peacock',
+        label: getDisplayName('Peacock'),
         kind: 'ott',
         links: {
           web: 'https://www.peacocktv.com/sports/nba',
@@ -90,7 +91,7 @@ function makeOptionForPlatform(
     case 'prime_video':
       return {
         id,
-        label: 'Prime',
+        label: getDisplayName('Prime Video'),
         kind: 'ott',
         links: {
           web: 'https://www.amazon.com/gp/video/storefront/ref=atv_nb_live',
@@ -100,7 +101,7 @@ function makeOptionForPlatform(
     case 'nba_tv':
       return {
         id,
-        label: 'NBA TV',
+        label: getDisplayName('NBA TV'),
         kind: 'network',
         links: {
           web: 'https://www.nba.com/watch/league-pass-stream',
@@ -110,7 +111,7 @@ function makeOptionForPlatform(
     case 'league_pass':
       return {
         id,
-        label: 'LP',
+        label: getDisplayName('League Pass'),
         kind: 'league_pass',
         links: {
           web: `https://www.nba.com/game/${espnGameId}`,
@@ -122,7 +123,7 @@ function makeOptionForPlatform(
     default:
       return {
         id: 'info',
-        label: 'TV info TBD',
+        label: getDisplayName('TV info TBD'),
         kind: 'info',
         links: {
           web: `https://www.espn.com/nba/game/_/gameId/${espnGameId}`,
@@ -160,7 +161,7 @@ export function buildStreamingOptions(
   if (!options.length) {
     options.push({
       id: 'info',
-      label: 'TV info TBD',
+      label: getDisplayName('TV info TBD'),
       kind: 'info',
       links: {
         web: `https://www.espn.com/nba/game/_/gameId/${espnGameId}`,
