@@ -65,11 +65,11 @@ export function AnswerChip({ game }: AnswerChipProps) {
 
   return (
     <Badge
-      className="inline-flex h-8 items-center gap-1.5 px-3 rounded-md border border-muted-foreground/20 text-xs font-medium text-foreground bg-transparent"
+      className="inline-flex h-8 items-center gap-1.5 px-3 rounded-md border border-muted-foreground/20 text-xs font-medium text-foreground bg-transparent max-w-full"
       aria-label={ariaLabel}
     >
       <PlatformIcon label={label} kind={primaryOption.kind} />
-      {label}
+      <span className="truncate">{label}</span>
     </Badge>
   );
 }
