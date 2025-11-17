@@ -9,7 +9,9 @@ import { SettingsTrigger } from '@/components/settings-trigger';
 import { ErrorFallback } from '@/components/error-fallback';
 import { TeamGlyph } from '@/components/team-glyph';
 import { GameTime } from '@/components/game-time';
-import { isGameTonight, getTodayForEspnApi, getDateForEspnApi, isGameOnDate } from '@/lib/timezone';
+import { SwipeableGameList } from '@/components/swipeable-game-list';
+import { AnimatedGameList } from '@/components/animated-game-list';
+import { getTodayForEspnApi, getDateForEspnApi, isGameOnDate } from '@/lib/timezone';
 import { filterToNationalOnly } from '@/lib/national';
 import { buildStreamingOptions, selectPrimaryOption } from '@/lib/streaming';
 import { ExternalLink } from 'lucide-react';
@@ -25,10 +27,7 @@ function GameRow({ game }: { game: Game }) {
       rel="noopener noreferrer"
       className="group flex items-center gap-4 px-4 py-3.5 border-b hover:bg-accent/10 transition-colors cursor-pointer"
     >
-      <div className="min-w-[90px] flex-shrink-0">
-        <AnswerChip game={game} />
-      </div>
-
+      {/* 1. MATCHUP SECTION - Primary visual anchor */}
       <div className="flex-1 min-w-0 flex items-center gap-2">
         <TeamGlyph abbr={game.teams.away.abbr} />
         <span className="text-base md:text-sm font-medium tabular-nums">
@@ -37,13 +36,19 @@ function GameRow({ game }: { game: Game }) {
         <TeamGlyph abbr={game.teams.home.abbr} />
       </div>
 
-      <div className="flex items-center gap-2">
-        <GameTime
-          utcTime={game.startTimeUtc}
-          className="w-20 text-right text-sm tabular-nums text-muted-foreground"
-        />
-        <ExternalLink className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" aria-hidden="true" />
+      {/* 2. TIME - Temporal context */}
+      <GameTime
+        utcTime={game.startTimeUtc}
+        className="w-20 flex-shrink-0 text-right text-sm tabular-nums text-muted-foreground"
+      />
+
+      {/* 3. AVAILABILITY - Action option */}
+      <div className="flex-shrink-0">
+        <AnswerChip game={game} />
       </div>
+
+      {/* 4. EXTERNAL LINK - Visual affordance */}
+      <ExternalLink className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" aria-hidden="true" />
     </a>
   );
 }
@@ -223,13 +228,17 @@ export default async function HomePage({ searchParams }: HomePageProps) {
 
         {/* Content */}
         <main className="py-4">
-          {error ? (
-            <ErrorFallback />
-          ) : (
-            <Suspense fallback={<SkeletonList count={6} />}>
-              <GameList games={games} />
-            </Suspense>
-          )}
+          <SwipeableGameList currentDate={targetDate}>
+            <AnimatedGameList dateKey={targetDate?.toISOString() || new Date().toISOString()}>
+              {error ? (
+                <ErrorFallback />
+              ) : (
+                <Suspense fallback={<SkeletonList count={6} />}>
+                  <GameList games={games} />
+                </Suspense>
+              )}
+            </AnimatedGameList>
+          </SwipeableGameList>
         </main>
 
         {/* Footer */}

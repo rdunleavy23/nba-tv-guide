@@ -1,7 +1,10 @@
 'use client';
 
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, CalendarDays } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { isToday } from 'date-fns';
 
 interface DayNavigatorProps {
   currentDate: Date;
@@ -29,16 +32,67 @@ export function DayNavigator({ currentDate, onDateChange }: DayNavigatorProps) {
     onDateChange(newDate);
   };
 
+  const handleSelectDate = (date: Date | undefined) => {
+    if (date) {
+      onDateChange(date);
+    }
+  };
+
+  // NBA season date limits (approximate)
+  const seasonStart = new Date('2024-10-01');
+  const seasonEnd = new Date('2025-06-30');
+  const currentIsToday = isToday(currentDate);
+
   return (
     <div className="flex items-center gap-1">
-      <Button variant="ghost" size="icon" onClick={goToPreviousDay} aria-label="Previous day">
-        <ChevronLeft className="h-4 w-4" />
+      {/* Previous Day Button */}
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={goToPreviousDay}
+        aria-label="Previous day"
+        className="hover:bg-accent/20"
+      >
+        <ChevronLeft className="h-5 w-5" />
       </Button>
-      <span className="text-sm tabular-nums px-2">
-        {formatDate(currentDate)}
-      </span>
-      <Button variant="ghost" size="icon" onClick={goToNextDay} aria-label="Next day">
-        <ChevronRight className="h-4 w-4" />
+
+      {/* Date Picker Popover */}
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button
+            variant="ghost"
+            className={`text-sm tabular-nums px-3 gap-2 h-10 ${
+              currentIsToday ? 'bg-accent/10 font-medium' : ''
+            }`}
+            aria-label="Select date"
+          >
+            <CalendarDays className="h-4 w-4 text-muted-foreground" />
+            <span>{formatDate(currentDate)}</span>
+          </Button>
+        </PopoverTrigger>
+
+        <PopoverContent className="w-auto p-0" align="center">
+          <Calendar
+            mode="single"
+            selected={currentDate}
+            onSelect={handleSelectDate}
+            initialFocus
+            fromDate={seasonStart}
+            toDate={seasonEnd}
+            defaultMonth={currentDate}
+          />
+        </PopoverContent>
+      </Popover>
+
+      {/* Next Day Button */}
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={goToNextDay}
+        aria-label="Next day"
+        className="hover:bg-accent/20"
+      >
+        <ChevronRight className="h-5 w-5" />
       </Button>
     </div>
   );
