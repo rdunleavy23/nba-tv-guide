@@ -56,10 +56,14 @@ const ABBREVIATION_MAP: Record<string, string> = {
  * @param abbr - The abbreviation from the API (may be 2 or 3 letters)
  * @returns A 3-letter abbreviation, or the original if no mapping exists
  */
-export function normalizeTeamAbbreviation(abbr: string): string {
-  if (!abbr) return 'UNK';
+export function normalizeTeamAbbreviation(abbr: string | null | undefined): string {
+  // Ensure we have a valid string
+  if (!abbr || typeof abbr !== 'string') return 'UNK';
   
-  const upperAbbr = abbr.toUpperCase();
+  const upperAbbr = abbr.toUpperCase().trim();
+  
+  // Handle empty string after trimming
+  if (!upperAbbr) return 'UNK';
   
   // Check if we have a direct mapping
   if (ABBREVIATION_MAP[upperAbbr]) {

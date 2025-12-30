@@ -57,6 +57,15 @@ const TEAM_LOGO_COMPONENTS: Record<string, React.ComponentType<{ size?: number |
 };
 
 export function TeamLogo({ abbr, className = '', size = 24 }: { abbr: string; className?: string; size?: number }) {
+  // Ensure abbr is a valid string
+  if (!abbr || typeof abbr !== 'string') {
+    return (
+      <span className={`inline-flex items-center justify-center text-[10px] font-bold ${className}`} style={{ width: size, height: size }}>
+        UNK
+      </span>
+    );
+  }
+  
   const LogoComponent = TEAM_LOGO_COMPONENTS[abbr.toUpperCase()];
   const containerRef = useRef<HTMLDivElement>(null);
   

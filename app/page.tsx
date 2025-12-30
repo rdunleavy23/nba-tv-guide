@@ -34,7 +34,7 @@ function GameRow({ game }: { game: Game }) {
 
       {/* Column 2: Matchup text - flexible */}
       <span className="text-base font-medium tabular-nums text-center">
-        {game.teams.away.abbr} @ {game.teams.home.abbr}
+        {String(game.teams.away.abbr || 'UNK')} @ {String(game.teams.home.abbr || 'UNK')}
       </span>
 
       {/* Column 3: Home team glyph - fixed 28px */}

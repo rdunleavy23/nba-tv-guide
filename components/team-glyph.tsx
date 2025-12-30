@@ -13,6 +13,9 @@ interface TeamGlyphProps {
 }
 
 export function TeamGlyph({ abbr, className = '' }: TeamGlyphProps) {
+  // Ensure abbr is a valid string
+  const safeAbbr = typeof abbr === 'string' && abbr ? abbr : 'UNK';
+  
   return (
     <span
       className={`
@@ -21,10 +24,10 @@ export function TeamGlyph({ abbr, className = '' }: TeamGlyphProps) {
         text-muted-foreground
         ${className}
       `}
-      aria-label={abbr}
-      title={abbr}
+      aria-label={safeAbbr}
+      title={safeAbbr}
     >
-      <TeamLogo abbr={abbr} size={18} className="text-muted-foreground" />
+      <TeamLogo abbr={safeAbbr} size={18} className="text-muted-foreground" />
     </span>
   );
 }
