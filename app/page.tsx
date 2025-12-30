@@ -24,25 +24,31 @@ function GameRow({ game }: { game: Game }) {
       href={game.primaryOption.links.web}
       target="_blank"
       rel="noopener noreferrer"
-      className="group flex items-center gap-3 px-4 py-4 border-b hover:bg-accent/10 transition-colors cursor-pointer"
+      className="group grid grid-cols-[28px_auto_28px_88px_90px] gap-2 items-center px-4 py-4 border-b hover:bg-accent/10 transition-colors cursor-pointer"
     >
-      {/* 1. MATCHUP SECTION - Primary visual anchor */}
-      <div className="flex-1 min-w-0 flex items-center gap-2">
+      {/* Column 1: Away team glyph - fixed 28px */}
+      <div className="flex justify-center">
         <TeamGlyph abbr={game.teams.away.abbr} />
-        <span className="text-base font-medium tabular-nums">
-          {game.teams.away.abbr} @ {game.teams.home.abbr}
-        </span>
+      </div>
+
+      {/* Column 2: Matchup text - flexible */}
+      <span className="text-base font-medium tabular-nums">
+        {game.teams.away.abbr} @ {game.teams.home.abbr}
+      </span>
+
+      {/* Column 3: Home team glyph - fixed 28px */}
+      <div className="flex justify-center">
         <TeamGlyph abbr={game.teams.home.abbr} />
       </div>
 
-      {/* 2. TIME - Fixed width column */}
+      {/* Column 4: Time - fixed 88px */}
       <GameTime
         utcTime={game.startTimeUtc}
-        className="w-[88px] flex-shrink-0 text-right text-sm tabular-nums text-muted-foreground"
+        className="text-right text-sm tabular-nums text-muted-foreground"
       />
 
-      {/* 3. AVAILABILITY - Fixed width column */}
-      <div className="w-[72px] flex-shrink-0 flex justify-end">
+      {/* Column 5: Badge - fixed 72px */}
+      <div className="flex justify-end">
         <AnswerChip game={game} />
       </div>
     </a>
