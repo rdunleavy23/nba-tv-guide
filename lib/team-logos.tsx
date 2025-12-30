@@ -67,8 +67,9 @@ export function TeamLogo({ abbr, className = '', size = 24 }: { abbr: string; cl
     const processSvg = () => {
       const svgElement = containerRef.current?.querySelector('svg');
       if (svgElement) {
-        // Process the SVG to convert colors to white/gray based on luminance
-        processSvgToMonochrome(svgElement);
+        // Process the SVG to convert colors to white/gray
+        // Pass team abbreviation for team-specific color overrides
+        processSvgToMonochrome(svgElement, abbr);
       }
     };
 
