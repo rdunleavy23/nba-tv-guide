@@ -96,8 +96,12 @@ function findColorOverride(
 ): string | null {
   for (const override of overrides) {
     const fromColor = parseColorToRgb(override.from);
-    if (fromColor && colorsMatch(color, fromColor, override.tolerance || 10)) {
-      return override.to;
+    if (fromColor) {
+      // Use tolerance, default to 20 for better matching
+      const tolerance = override.tolerance ?? 20;
+      if (colorsMatch(color, fromColor, tolerance)) {
+        return override.to;
+      }
     }
   }
   return null;
@@ -118,8 +122,8 @@ function getComputedFillColor(element: SVGElement): string | null {
     try {
       const computed = window.getComputedStyle(element);
       const fill = computed.fill;
-      if (fill && fill !== 'none' && fill !== 'transparent' && fill !== 'rgb(0, 0, 0)') {
-        // rgb(0, 0, 0) is often the default, so we want to process it
+      if (fill && fill !== 'none' && fill !== 'transparent') {
+        // Process all colors including black (rgb(0, 0, 0))
         return fill;
       }
     } catch (e) {
@@ -165,16 +169,13 @@ function processSvgElement(element: SVGElement, teamAbbr?: string): void {
 
       element.setAttribute('fill', replacementColor);
     } else {
-      // If we can't parse the color, default to white
-      element.setAttribute('fill', 'white');
+      // If we can't parse the color, don't set it - let it inherit or use default
+      // This prevents overwriting with white when we don't know the color
     }
   } else {
     // Elements without explicit fill might be transparent or inherit
-    // Only set fill if it's a shape element that needs it
-    const shapeElements = ['path', 'circle', 'ellipse', 'rect', 'polygon', 'polyline'];
-    if (shapeElements.includes(element.tagName.toLowerCase())) {
-      element.setAttribute('fill', 'white');
-    }
+    // Don't force a fill - let the SVG use its natural colors or inheritance
+    // Only process elements that explicitly have colors
   }
 
   // Also handle stroke if present - check overrides first
