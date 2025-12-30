@@ -14,7 +14,6 @@ import { AnimatedGameList } from '@/components/animated-game-list';
 import { getTodayForEspnApi, getDateForEspnApi, isGameOnDate } from '@/lib/timezone';
 import { filterToNationalOnly } from '@/lib/national';
 import { buildStreamingOptions, selectPrimaryOption } from '@/lib/streaming';
-import { ExternalLink } from 'lucide-react';
 
 export const runtime = 'edge';
 
@@ -25,30 +24,27 @@ function GameRow({ game }: { game: Game }) {
       href={game.primaryOption.links.web}
       target="_blank"
       rel="noopener noreferrer"
-      className="group flex items-center gap-4 px-4 py-3.5 border-b hover:bg-accent/10 transition-colors cursor-pointer"
+      className="group flex items-center gap-3 px-4 py-4 border-b hover:bg-accent/10 transition-colors cursor-pointer"
     >
       {/* 1. MATCHUP SECTION - Primary visual anchor */}
       <div className="flex-1 min-w-0 flex items-center gap-2">
         <TeamGlyph abbr={game.teams.away.abbr} />
-        <span className="text-base md:text-sm font-medium tabular-nums">
+        <span className="text-base font-medium tabular-nums">
           {game.teams.away.abbr} @ {game.teams.home.abbr}
         </span>
         <TeamGlyph abbr={game.teams.home.abbr} />
       </div>
 
-      {/* 2. TIME - Temporal context */}
+      {/* 2. TIME - Fixed width column */}
       <GameTime
         utcTime={game.startTimeUtc}
-        className="w-20 flex-shrink-0 text-right text-sm tabular-nums text-muted-foreground"
+        className="w-[88px] flex-shrink-0 text-right text-sm tabular-nums text-muted-foreground"
       />
 
-      {/* 3. AVAILABILITY - Action option */}
-      <div className="flex-shrink-0">
+      {/* 3. AVAILABILITY - Fixed width column */}
+      <div className="w-[72px] flex-shrink-0 flex justify-end">
         <AnswerChip game={game} />
       </div>
-
-      {/* 4. EXTERNAL LINK - Visual affordance */}
-      <ExternalLink className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" aria-hidden="true" />
     </a>
   );
 }
