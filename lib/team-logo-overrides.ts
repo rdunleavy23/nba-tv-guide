@@ -21,66 +21,74 @@ export interface TeamLogoOverride {
 /**
  * NBA Team Logo Overrides
  * Manually tuned for each team to preserve internal details
+ * Each team's colors have been researched and tested for optimal visibility
  */
 export const TEAM_LOGO_OVERRIDES: Record<string, TeamLogoOverride> = {
   // EASTERN CONFERENCE
 
   'ATL': {
-    // Atlanta Hawks - Red/white hawk
+    // Atlanta Hawks - Red hawk with PAC-MAN design
     colors: [
-      { from: '#E03A3E', to: 'rgb(220, 220, 220)' }, // Red hawk body → light gray
-      { from: '#C1D32F', to: 'rgb(240, 240, 240)' }, // Yellow/green accents → near white
-      { from: '#26282A', to: 'rgb(180, 180, 180)' }, // Black details → medium gray
+      { from: '#E03A3E', to: 'rgb(215, 215, 215)' }, // Hawks red → light gray
+      { from: '#C1D32F', to: 'rgb(235, 235, 235)' }, // Volt green → very light gray
+      { from: '#26282A', to: 'rgb(175, 175, 175)' }, // Black outlines → medium gray
+      { from: '#FFFFFF', to: 'rgb(250, 250, 250)' }, // White → near white
     ],
-    notes: 'Hawk outline needs contrast against body',
+    notes: 'Hawk PAC-MAN shape needs outline contrast',
   },
 
   'BOS': {
-    // Boston Celtics - Green leprechaun/shamrock
+    // Boston Celtics - Green shamrock/leprechaun
     colors: [
-      { from: '#007A33', to: 'rgb(200, 200, 200)' }, // Celtics green → medium-light gray
-      { from: '#BA9653', to: 'rgb(230, 230, 230)' }, // Gold accents → light gray
-      { from: '#000000', to: 'rgb(170, 170, 170)' }, // Black outlines → darker gray
+      { from: '#007A33', to: 'rgb(205, 205, 205)' }, // Celtics green → medium-light gray
+      { from: '#BA9653', to: 'rgb(230, 230, 230)' }, // Gold → light gray
+      { from: '#963821', to: 'rgb(195, 195, 195)' }, // Brown → medium gray
+      { from: '#000000', to: 'rgb(170, 170, 170)' }, // Black outlines → dark gray
+      { from: '#FFFFFF', to: 'rgb(250, 250, 250)' }, // White → near white
     ],
-    notes: 'Leprechaun/shamrock details need clear outline separation',
+    notes: 'Shamrock/leprechaun leaf details need separation',
   },
 
   'BKN': {
-    // Brooklyn Nets - Black/white shield
+    // Brooklyn Nets - Black and white shield
     colors: [
-      { from: '#000000', to: 'rgb(190, 190, 190)' }, // Black → medium gray for visibility
-      { from: '#FFFFFF', to: 'rgb(255, 255, 255)' }, // White → white (already visible)
+      { from: '#000000', to: 'rgb(190, 190, 190)' }, // Black → medium gray
+      { from: '#FFFFFF', to: 'rgb(250, 250, 250)' }, // White → near white
+      { from: '#777D84', to: 'rgb(210, 210, 210)' }, // Gray → light gray
     ],
-    notes: 'Mostly monochrome logo, needs contrast for shield details',
+    notes: 'Shield outline needs visibility on dark background',
   },
 
   'CHA': {
-    // Charlotte Hornets - Teal/purple hornet
+    // Charlotte Hornets - Teal and purple hornet
     colors: [
       { from: '#00788C', to: 'rgb(210, 210, 210)' }, // Teal → light gray
-      { from: '#1D1160', to: 'rgb(180, 180, 180)' }, // Purple → medium gray
-      { from: '#A1A1A4', to: 'rgb(230, 230, 230)' }, // Gray accents → near white
+      { from: '#1D1160', to: 'rgb(185, 185, 185)' }, // Purple → medium gray
+      { from: '#A1A1A4', to: 'rgb(225, 225, 225)' }, // Silver → light gray
+      { from: '#FFFFFF', to: 'rgb(245, 245, 245)' }, // White → very light gray
     ],
-    notes: 'Hornet wings and stripes need clear separation',
+    notes: 'Hornet wings and body stripes need contrast',
   },
 
   'CHI': {
     // Chicago Bulls - Red bull head
     colors: [
-      { from: '#CE1141', to: 'rgb(220, 220, 220)' }, // Bulls red → light gray
-      { from: '#000000', to: 'rgb(170, 170, 170)' }, // Black outlines → darker gray
+      { from: '#CE1141', to: 'rgb(218, 218, 218)' }, // Bulls red → light gray
+      { from: '#000000', to: 'rgb(172, 172, 172)' }, // Black → medium gray
+      { from: '#FFFFFF', to: 'rgb(248, 248, 248)' }, // White → near white
     ],
-    notes: 'Bull horns and facial details critical for recognition',
+    notes: 'Bull horns and face outline critical',
   },
 
   'CLE': {
-    // Cleveland Cavaliers - Wine/gold 'C' sword
+    // Cleveland Cavaliers - Wine and gold
     colors: [
       { from: '#860038', to: 'rgb(200, 200, 200)' }, // Wine → medium-light gray
-      { from: '#FDBB30', to: 'rgb(240, 240, 240)' }, // Gold → near white
-      { from: '#041E42', to: 'rgb(175, 175, 175)' }, // Navy → medium gray
+      { from: '#FDBB30', to: 'rgb(238, 238, 238)' }, // Gold → very light gray
+      { from: '#041E42', to: 'rgb(178, 178, 178)' }, // Navy → medium gray
+      { from: '#000000', to: 'rgb(168, 168, 168)' }, // Black → dark gray
     ],
-    notes: 'Sword through C needs contrast',
+    notes: 'Sword through C letter needs outline definition',
   },
 
   'DET': {
