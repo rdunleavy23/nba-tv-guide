@@ -137,15 +137,18 @@ async function fetchGamesForDate(targetDate?: Date): Promise<{ games: Game[]; er
         ((awayTeam.team as Record<string, unknown>)?.shortDisplayName as string) ||
         'Unknown' : 'Unknown';
 
-      const homeAbbr = homeTeam?.team ?
+      // Ensure abbreviations are exactly 3 characters (required for grid layout)
+      const rawHomeAbbr = homeTeam?.team ?
         ((homeTeam.team as Record<string, unknown>)?.abbreviation as string) ||
         ((homeTeam.team as Record<string, unknown>)?.shortName as string) ||
         homeTeamName.substring(0, 3).toUpperCase() : 'UNK';
+      const homeAbbr = rawHomeAbbr.substring(0, 3).toUpperCase();
 
-      const awayAbbr = awayTeam?.team ?
+      const rawAwayAbbr = awayTeam?.team ?
         ((awayTeam.team as Record<string, unknown>)?.abbreviation as string) ||
         ((awayTeam.team as Record<string, unknown>)?.shortName as string) ||
         awayTeamName.substring(0, 3).toUpperCase() : 'UNK';
+      const awayAbbr = rawAwayAbbr.substring(0, 3).toUpperCase();
 
       // Validate and process game time
       const rawTime = event.date as string;
