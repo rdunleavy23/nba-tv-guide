@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>NBA Logo Color Inspector</title>
+  <style>
+    body {
+      font-family: monospace;
+      padding: 20px;
+      background: #0a0a0a;
+      color: #fafafa;
+    }
+    .team-section {
+      margin-bottom: 40px;
+      padding: 20px;
+      border: 1px solid #333;
+      background: #1a1a1a;
+    }
+    .logo-display {
+      display: flex;
+      gap: 40px;
+      align-items: flex-start;
+      margin: 20px 0;
+    }
+    .logo-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .logo-box {
+      width: 100px;
+      height: 100px;
+      border: 1px solid #444;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 10px;
+    }
+    .colors-list {
+      list-style: none;
+      padding: 0;
+      margin: 10px 0;
+    }
+    .color-item {
+      padding: 8px;
+      margin: 4px 0;
+      border-left: 20px solid;
+      font-size: 12px;
+    }
+    h2 {
+      color: #4a9eff;
+      margin: 0 0 10px 0;
+    }
+    h3 {
+      color: #888;
+      font-size: 14px;
+      margin: 10px 0 5px 0;
+    }
+    .copy-btn {
+      background: #4a9eff;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      cursor: pointer;
+      font-family: monospace;
+      margin-top: 10px;
+    }
+    .copy-btn:hover {
+      background: #3a8eef;
+    }
+  </style>
+</head>
+<body>
+  <h1>NBA Logo Color Inspector</h1>
+  <p>Inspecting colors from react-nba-logos package...</p>
+
+  <div id="output"></div>
+
+  <script type="module">
+    // Import react-nba-logos
+    import * as NBALogos from 'https://esm.sh/react-nba-logos';
+    import React from 'https://esm.sh/react';
+    import ReactDOM from 'https://esm.sh/react-dom';
+
+    const teams = [
+      // Eastern Conference
+      { abbr: 'ATL', name: 'Atlanta Hawks' },
+      { abbr: 'BOS', name: 'Boston Celtics' },
+      { abbr: 'BKN', name: 'Brooklyn Nets' },
+      { abbr: 'CHA', name: 'Charlotte Hornets' },
+      { abbr: 'CHI', name: 'Chicago Bulls' },
+      { abbr: 'CLE', name: 'Cleveland Cavaliers' },
+      { abbr: 'DET', name: 'Detroit Pistons' },
+      { abbr: 'IND', name: 'Indiana Pacers' },
+      { abbr: 'MIA', name: 'Miami Heat' },
+      { abbr: 'MIL', name: 'Milwaukee Bucks' },
+      { abbr: 'NYK', name: 'New York Knicks' },
+      { abbr: 'ORL', name: 'Orlando Magic' },
+      { abbr: 'PHI', name: 'Philadelphia 76ers' },
+      { abbr: 'TOR', name: 'Toronto Raptors' },
+      { abbr: 'WAS', name: 'Washington Wizards' },
+
+      // Western Conference
+      { abbr: 'DAL', name: 'Dallas Mavericks' },
+      { abbr: 'DEN', name: 'Denver Nuggets' },
+      { abbr: 'GSW', name: 'Golden State Warriors' },
+      { abbr: 'HOU', name: 'Houston Rockets' },
+      { abbr: 'LAC', name: 'LA Clippers' },
+      { abbr: 'LAL', name: 'LA Lakers' },
+      { abbr: 'MEM', name: 'Memphis Grizzlies' },
+      { abbr: 'MIN', name: 'Minnesota Timberwolves' },
+      { abbr: 'NOP', name: 'New Orleans Pelicans' },
+      { abbr: 'OKC', name: 'Oklahoma City Thunder' },
+      { abbr: 'PHX', name: 'Phoenix Suns' },
+      { abbr: 'POR', name: 'Portland Trail Blazers' },
+      { abbr: 'SAC', name: 'Sacramento Kings' },
+      { abbr: 'SAS', name: 'San Antonio Spurs' },
+      { abbr: 'UTA', name: 'Utah Jazz' },
+    ];
+
+    function extractColors(svgElement) {
+      const colors = new Set();
+
+      // Get all elements that can have fill or stroke
+      const elements = svgElement.querySelectorAll('path, circle, ellipse, rect, polygon, polyline, g');
+
+      elements.forEach(el => {
+        // Check fill
+        const fill = el.getAttribute('fill');
+        if (fill && fill !== 'none' && fill !== 'transparent') {
+          colors.add(fill);
+        }
+
+        // Check computed fill
+        const computedFill = window.getComputedStyle(el).fill;
+        if (computedFill && computedFill !== 'none' && computedFill !== 'rgb(0, 0, 0)') {
+          colors.add(computedFill);
+        }
+
+        // Check stroke
+        const stroke = el.getAttribute('stroke');
+        if (stroke && stroke !== 'none' && stroke !== 'transparent') {
+          colors.add(stroke);
+        }
+      });
+
+      return Array.from(colors);
+    }
+
+    function rgbToHex(rgb) {
+      const match = rgb.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
+      if (match) {
+        const r = parseInt(match[1]).toString(16).padStart(2, '0');
+        const g = parseInt(match[2]).toString(16).padStart(2, '0');
+        const b = parseInt(match[3]).toString(16).padStart(2, '0');
+        return `#${r}${g}${b}`;
+      }
+      return rgb;
+    }
+
+    async function inspectTeam(team) {
+      return new Promise((resolve) => {
+        const container = document.createElement('div');
+        container.className = 'team-section';
+        container.id = `team-${team.abbr}`;
+
+        const LogoComponent = NBALogos[team.abbr];
+        if (!LogoComponent) {
+          container.innerHTML = `<h2>${team.name} (${team.abbr})</h2><p>Logo not found</p>`;
+          document.getElementById('output').appendChild(container);
+          resolve();
+          return;
+        }
+
+        // Render the logo
+        const logoContainer = document.createElement('div');
+        logoContainer.className = 'logo-box';
+        container.appendChild(logoContainer);
+
+        ReactDOM.render(
+          React.createElement(LogoComponent, { size: 80 }),
+          logoContainer,
+          () => {
+            // Extract colors after render
+            setTimeout(() => {
+              const svg = logoContainer.querySelector('svg');
+              if (!svg) {
+                container.innerHTML = `<h2>${team.name} (${team.abbr})</h2><p>SVG not rendered</p>`;
+                resolve();
+                return;
+              }
+
+              const colors = extractColors(svg);
+
+              let html = `<h2>${team.name} (${team.abbr})</h2>`;
+              html += `<div class="logo-display">`;
+              html += `<div class="logo-container"><div class="logo-box" id="logo-${team.abbr}"></div><p>Original</p></div>`;
+              html += `<div><h3>Colors Found (${colors.length}):</h3><ul class="colors-list">`;
+
+              colors.forEach(color => {
+                const hex = color.startsWith('#') ? color : rgbToHex(color);
+                html += `<li class="color-item" style="border-color: ${color}">`;
+                html += `${hex} <code style="color: #888">${color}</code>`;
+                html += `</li>`;
+              });
+
+              html += `</ul>`;
+              html += `<button class="copy-btn" onclick="copyOverride('${team.abbr}', ${JSON.stringify(colors).replace(/"/g, '&quot;')})">Copy Override Template</button>`;
+              html += `</div></div>`;
+
+              container.innerHTML = html;
+
+              // Re-render logo in the new container
+              const newLogoContainer = document.getElementById(`logo-${team.abbr}`);
+              ReactDOM.render(
+                React.createElement(LogoComponent, { size: 80 }),
+                newLogoContainer
+              );
+
+              document.getElementById('output').appendChild(container);
+              resolve();
+            }, 100);
+          }
+        );
+      });
+    }
+
+    window.copyOverride = function(abbr, colors) {
+      const hexColors = colors.map(c => c.startsWith('#') ? c : rgbToHex(c));
+      let template = `'${abbr}': {\n  colors: [\n`;
+      hexColors.forEach(hex => {
+        template += `    { from: '${hex}', to: 'rgb(XXX, XXX, XXX)' }, // TODO: Set gray value\n`;
+      });
+      template += `  ],\n  notes: 'TODO: Document critical details',\n},`;
+
+      navigator.clipboard.writeText(template);
+      alert('Override template copied to clipboard!');
+    };
+
+    // Inspect all teams sequentially
+    async function inspectAll() {
+      for (const team of teams) {
+        await inspectTeam(team);
+      }
+      console.log('All teams inspected');
+    }
+
+    inspectAll();
+  </script>
+</body>
+</html>

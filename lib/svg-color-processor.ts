@@ -1,7 +1,10 @@
 /**
  * SVG Color Processor - Convert colored SVGs to white/gray monochrome
  * Preserves internal details by calculating luminance and replacing colors accordingly
+ * Supports team-specific overrides for manual fine-tuning
  */
+
+import { TEAM_LOGO_OVERRIDES, type ColorOverride } from './team-logo-overrides';
 
 /**
  * Calculate relative luminance of an RGB color (WCAG formula)
@@ -69,6 +72,38 @@ function parseColorToRgb(color: string): { r: number; g: number; b: number } | n
 }
 
 /**
+ * Check if two RGB colors match within tolerance
+ */
+function colorsMatch(
+  rgb1: { r: number; g: number; b: number },
+  rgb2: { r: number; g: number; b: number },
+  tolerance: number = 10
+): boolean {
+  const rDiff = Math.abs(rgb1.r - rgb2.r);
+  const gDiff = Math.abs(rgb1.g - rgb2.g);
+  const bDiff = Math.abs(rgb1.b - rgb2.b);
+
+  // Colors match if all channels are within tolerance
+  return rDiff <= tolerance && gDiff <= tolerance && bDiff <= tolerance;
+}
+
+/**
+ * Find a matching color override for the given color
+ */
+function findColorOverride(
+  color: { r: number; g: number; b: number },
+  overrides: ColorOverride[]
+): string | null {
+  for (const override of overrides) {
+    const fromColor = parseColorToRgb(override.from);
+    if (fromColor && colorsMatch(color, fromColor, override.tolerance || 10)) {
+      return override.to;
+    }
+  }
+  return null;
+}
+
+/**
  * Get computed fill color from an SVG element
  */
 function getComputedFillColor(element: SVGElement): string | null {
@@ -97,8 +132,9 @@ function getComputedFillColor(element: SVGElement): string | null {
 
 /**
  * Process a single SVG element and replace its fill color based on luminance
+ * Checks team-specific overrides first, then falls back to luminance calculation
  */
-function processSvgElement(element: SVGElement): void {
+function processSvgElement(element: SVGElement, teamAbbr?: string): void {
   // Skip elements that shouldn't have fills (like defs, masks, etc.)
   const skipTags = ['defs', 'mask', 'clipPath', 'pattern', 'linearGradient', 'radialGradient'];
   if (skipTags.includes(element.tagName.toLowerCase())) {
@@ -106,24 +142,28 @@ function processSvgElement(element: SVGElement): void {
   }
 
   const fillColor = getComputedFillColor(element);
-  
+
   if (fillColor) {
     const rgb = parseColorToRgb(fillColor);
     if (rgb) {
-      // Calculate luminance
-      const luminance = calculateLuminance(rgb.r, rgb.g, rgb.b);
+      let replacementColor: string | null = null;
 
-      // Replace color based on luminance
-      // High luminance (light colors) → white
-      // Low luminance (dark colors) → bright gray for visibility on dark background
-      if (luminance > 0.5) {
-        element.setAttribute('fill', 'white');
-      } else {
-        // Use bright grays for visibility on dark backgrounds
-        // Very dark (luminance 0) → gray 200, medium dark (luminance 0.5) → white
-        const grayValue = Math.round(200 + (luminance * 110)); // Range: 200-255
-        element.setAttribute('fill', `rgb(${grayValue}, ${grayValue}, ${grayValue})`);
+      // Check team-specific overrides first
+      if (teamAbbr) {
+        const teamOverride = TEAM_LOGO_OVERRIDES[teamAbbr.toUpperCase()];
+        if (teamOverride?.colors) {
+          replacementColor = findColorOverride(rgb, teamOverride.colors);
+        }
       }
+
+      // Fall back to luminance-based calculation if no override found
+      if (!replacementColor) {
+        const luminance = calculateLuminance(rgb.r, rgb.g, rgb.b);
+        const grayValue = Math.round(150 + (luminance * 105)); // luminance 0→150, 0.5→202, 1.0→255
+        replacementColor = `rgb(${grayValue}, ${grayValue}, ${grayValue})`;
+      }
+
+      element.setAttribute('fill', replacementColor);
     } else {
       // If we can't parse the color, default to white
       element.setAttribute('fill', 'white');
@@ -137,26 +177,39 @@ function processSvgElement(element: SVGElement): void {
     }
   }
 
-  // Also handle stroke if present
+  // Also handle stroke if present - check overrides first
   const stroke = element.getAttribute('stroke');
   if (stroke && stroke !== 'none' && stroke !== 'transparent') {
     const strokeRgb = parseColorToRgb(stroke);
     if (strokeRgb) {
-      const strokeLuminance = calculateLuminance(strokeRgb.r, strokeRgb.g, strokeRgb.b);
-      if (strokeLuminance > 0.5) {
-        element.setAttribute('stroke', 'white');
-      } else {
-        const grayValue = Math.round(200 + (strokeLuminance * 110)); // Range: 200-255
-        element.setAttribute('stroke', `rgb(${grayValue}, ${grayValue}, ${grayValue})`);
+      let strokeReplacement: string | null = null;
+
+      // Check team-specific overrides first
+      if (teamAbbr) {
+        const teamOverride = TEAM_LOGO_OVERRIDES[teamAbbr.toUpperCase()];
+        if (teamOverride?.colors) {
+          strokeReplacement = findColorOverride(strokeRgb, teamOverride.colors);
+        }
       }
+
+      // Fall back to luminance-based calculation
+      if (!strokeReplacement) {
+        const strokeLuminance = calculateLuminance(strokeRgb.r, strokeRgb.g, strokeRgb.b);
+        const strokeGrayValue = Math.round(150 + (strokeLuminance * 105));
+        strokeReplacement = `rgb(${strokeGrayValue}, ${strokeGrayValue}, ${strokeGrayValue})`;
+      }
+
+      element.setAttribute('stroke', strokeReplacement);
     }
   }
 }
 
 /**
  * Process an entire SVG element tree, converting all fills to white/gray
+ * @param svgElement The SVG element to process
+ * @param teamAbbr Optional team abbreviation for team-specific color overrides
  */
-export function processSvgToMonochrome(svgElement: SVGElement | null): void {
+export function processSvgToMonochrome(svgElement: SVGElement | null, teamAbbr?: string): void {
   if (!svgElement) return;
 
   // Find all elements that can have fill colors
@@ -166,19 +219,19 @@ export function processSvgToMonochrome(svgElement: SVGElement | null): void {
   );
 
   elementsToProcess.forEach((element) => {
-    processSvgElement(element);
+    processSvgElement(element, teamAbbr);
   });
 
   // Process groups and their direct children
   const groups = svgElement.querySelectorAll<SVGElement>('g');
   groups.forEach((group) => {
     // Process the group itself if it has fill
-    processSvgElement(group);
-    
+    processSvgElement(group, teamAbbr);
+
     // Process direct children
     Array.from(group.children).forEach((child) => {
       if (child instanceof SVGElement) {
-        processSvgElement(child);
+        processSvgElement(child, teamAbbr);
       }
     });
   });
