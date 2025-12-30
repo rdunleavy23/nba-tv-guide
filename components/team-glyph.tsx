@@ -16,7 +16,7 @@ export function TeamGlyph({ abbr, className = '' }: TeamGlyphProps) {
   return (
     <span
       className={`
-        inline-flex h-6 w-6 items-center justify-center
+        inline-flex h-7 w-7 items-center justify-center
         rounded-full border border-muted-foreground/20
         text-muted-foreground
         ${className}
@@ -24,7 +24,7 @@ export function TeamGlyph({ abbr, className = '' }: TeamGlyphProps) {
       aria-label={abbr}
       title={abbr}
     >
-      <TeamLogo abbr={abbr} size={16} className="text-muted-foreground" />
+      <TeamLogo abbr={abbr} size={18} className="text-muted-foreground" />
     </span>
   );
 }
