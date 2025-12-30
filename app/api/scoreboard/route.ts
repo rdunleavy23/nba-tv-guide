@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { filterToNationalOnly } from '@/lib/national';
 import { getTodayForEspnApi, getDateForEspnApi } from '@/lib/timezone';
+import { normalizeTeamAbbreviation } from '@/lib/team-abbreviations';
 
 export const runtime = 'edge';
 
@@ -98,15 +99,19 @@ export async function GET(request: NextRequest) {
         ((awayTeam.team as Record<string, unknown>)?.shortDisplayName as string) || 
         'Unknown' : 'Unknown';
         
-      const homeAbbr = homeTeam?.team ? 
+      const homeAbbrRaw = homeTeam?.team ? 
         ((homeTeam.team as Record<string, unknown>)?.abbreviation as string) || 
         ((homeTeam.team as Record<string, unknown>)?.shortName as string) || 
         homeTeamName.substring(0, 3).toUpperCase() : 'UNK';
         
-      const awayAbbr = awayTeam?.team ? 
+      const awayAbbrRaw = awayTeam?.team ? 
         ((awayTeam.team as Record<string, unknown>)?.abbreviation as string) || 
         ((awayTeam.team as Record<string, unknown>)?.shortName as string) || 
         awayTeamName.substring(0, 3).toUpperCase() : 'UNK';
+
+      // Normalize to 3-letter abbreviations
+      const homeAbbr = normalizeTeamAbbreviation(homeAbbrRaw);
+      const awayAbbr = normalizeTeamAbbreviation(awayAbbrRaw);
       
       // Validate and process game time
       const rawTime = event.date as string;
