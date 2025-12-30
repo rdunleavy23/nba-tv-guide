@@ -113,17 +113,12 @@ function processSvgElement(element: SVGElement): void {
       // Calculate luminance
       const luminance = calculateLuminance(rgb.r, rgb.g, rgb.b);
 
-      // Replace color based on luminance
-      // High luminance (light colors) → white
-      // Low luminance (dark colors) → bright gray for visibility on dark background
-      if (luminance > 0.5) {
-        element.setAttribute('fill', 'white');
-      } else {
-        // Use bright grays for visibility on dark backgrounds
-        // Very dark (luminance 0) → gray 200, medium dark (luminance 0.5) → white
-        const grayValue = Math.round(200 + (luminance * 110)); // Range: 200-255
-        element.setAttribute('fill', `rgb(${grayValue}, ${grayValue}, ${grayValue})`);
-      }
+      // Replace color based on luminance - map full range to preserve internal details
+      // Dark colors → lighter grays, light colors → white
+      // Preserves relative contrast between logo elements (e.g., 76ers '76' details)
+      // Range: 150-255 provides visibility on dark backgrounds while maintaining contrast
+      const grayValue = Math.round(150 + (luminance * 105)); // luminance 0→150, 0.5→202, 1.0→255
+      element.setAttribute('fill', `rgb(${grayValue}, ${grayValue}, ${grayValue})`);
     } else {
       // If we can't parse the color, default to white
       element.setAttribute('fill', 'white');
@@ -137,18 +132,14 @@ function processSvgElement(element: SVGElement): void {
     }
   }
 
-  // Also handle stroke if present
+  // Also handle stroke if present - use same luminance mapping
   const stroke = element.getAttribute('stroke');
   if (stroke && stroke !== 'none' && stroke !== 'transparent') {
     const strokeRgb = parseColorToRgb(stroke);
     if (strokeRgb) {
       const strokeLuminance = calculateLuminance(strokeRgb.r, strokeRgb.g, strokeRgb.b);
-      if (strokeLuminance > 0.5) {
-        element.setAttribute('stroke', 'white');
-      } else {
-        const grayValue = Math.round(200 + (strokeLuminance * 110)); // Range: 200-255
-        element.setAttribute('stroke', `rgb(${grayValue}, ${grayValue}, ${grayValue})`);
-      }
+      const strokeGrayValue = Math.round(150 + (strokeLuminance * 105));
+      element.setAttribute('stroke', `rgb(${strokeGrayValue}, ${strokeGrayValue}, ${strokeGrayValue})`);
     }
   }
 }
