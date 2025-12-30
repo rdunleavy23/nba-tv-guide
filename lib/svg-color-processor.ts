@@ -115,13 +115,13 @@ function processSvgElement(element: SVGElement): void {
 
       // Replace color based on luminance
       // High luminance (light colors) → white
-      // Low luminance (dark colors) → gray for contrast
+      // Low luminance (dark colors) → bright gray for visibility on dark background
       if (luminance > 0.5) {
         element.setAttribute('fill', 'white');
       } else {
-        // Use a gray that's visible but provides contrast
-        // Scale: very dark (luminance 0) → gray 128, medium dark (luminance 0.5) → gray 192
-        const grayValue = Math.round(128 + (luminance * 64)); // Range: 128-192
+        // Use bright grays for visibility on dark backgrounds
+        // Very dark (luminance 0) → gray 200, medium dark (luminance 0.5) → white
+        const grayValue = Math.round(200 + (luminance * 110)); // Range: 200-255
         element.setAttribute('fill', `rgb(${grayValue}, ${grayValue}, ${grayValue})`);
       }
     } else {
@@ -146,7 +146,7 @@ function processSvgElement(element: SVGElement): void {
       if (strokeLuminance > 0.5) {
         element.setAttribute('stroke', 'white');
       } else {
-        const grayValue = Math.round(128 + (strokeLuminance * 64));
+        const grayValue = Math.round(200 + (strokeLuminance * 110)); // Range: 200-255
         element.setAttribute('stroke', `rgb(${grayValue}, ${grayValue}, ${grayValue})`);
       }
     }

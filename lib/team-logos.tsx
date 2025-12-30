@@ -24,6 +24,7 @@ const TEAM_LOGO_COMPONENTS: Record<string, React.ComponentType<{ size?: number |
   'PHX': NBALogos.PHX, // Phoenix Suns
   'DEN': NBALogos.DEN, // Denver Nuggets
   'UTA': NBALogos.UTA, // Utah Jazz
+  'UT': NBALogos.UTA,
   'POR': NBALogos.POR, // Portland Trail Blazers
   'OKC': NBALogos.OKC, // Oklahoma City Thunder
   'MIN': NBALogos.MIN, // Minnesota Timberwolves
