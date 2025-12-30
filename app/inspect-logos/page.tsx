@@ -1,7 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import * as NBALogos from 'react-nba-logos';
+import { processSvgToMonochrome } from '@/lib/svg-color-processor';
+import { TEAM_LOGO_OVERRIDES } from '@/lib/team-logo-overrides';
 
 const TEAMS = [
   { abbr: 'ATL', name: 'Atlanta Hawks' },
@@ -80,7 +82,10 @@ function extractColors(svgElement: SVGElement): Set<string> {
 
 function TeamInspector({ team }: { team: typeof TEAMS[number] }) {
   const [colors, setColors] = useState<string[]>([]);
+  const [overrideMatches, setOverrideMatches] = useState<Record<string, { matched: boolean; overrideTo?: string }>>({});
+  const processedLogoRef = useRef<HTMLDivElement>(null);
   const LogoComponent = NBALogos[team.abbr as keyof typeof NBALogos] as React.ComponentType<{ size?: number }>;
+  const teamOverrides = TEAM_LOGO_OVERRIDES[team.abbr];
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -89,13 +94,41 @@ function TeamInspector({ team }: { team: typeof TEAMS[number] }) {
         const svg = container.querySelector('svg');
         if (svg) {
           const extractedColors = extractColors(svg);
-          setColors(Array.from(extractedColors).sort());
+          const colorArray = Array.from(extractedColors).sort();
+          setColors(colorArray);
+
+          // Check which colors match overrides
+          const matches: Record<string, { matched: boolean; overrideTo?: string }> = {};
+          colorArray.forEach((color) => {
+            if (teamOverrides?.colors) {
+              const override = teamOverrides.colors.find((o) => {
+                // Simple hex comparison (could be enhanced with tolerance)
+                const overrideHex = o.from.startsWith('#') ? o.from.toUpperCase() : o.from;
+                return overrideHex === color || overrideHex === `#${color}`;
+              });
+              matches[color] = {
+                matched: !!override,
+                overrideTo: override?.to,
+              };
+            } else {
+              matches[color] = { matched: false };
+            }
+          });
+          setOverrideMatches(matches);
+        }
+      }
+
+      // Process the processed logo
+      if (processedLogoRef.current) {
+        const processedSvg = processedLogoRef.current.querySelector('svg');
+        if (processedSvg) {
+          processSvgToMonochrome(processedSvg, team.abbr);
         }
       }
     }, 100);
 
     return () => clearTimeout(timer);
-  }, [team.abbr]);
+  }, [team.abbr, teamOverrides]);
 
   const copyOverride = () => {
     let template = `  '${team.abbr}': {\n    colors: [\n`;
@@ -126,25 +159,64 @@ function TeamInspector({ team }: { team: typeof TEAMS[number] }) {
           <span className="text-sm text-gray-400">Original</span>
         </div>
 
+        {/* Processed Logo */}
+        <div className="flex flex-col items-center">
+          <div
+            ref={processedLogoRef}
+            className="w-32 h-32 border border-gray-600 flex items-center justify-center bg-gray-800 mb-2"
+          >
+            {LogoComponent && <LogoComponent size={100} />}
+          </div>
+          <span className="text-sm text-gray-400">Processed</span>
+        </div>
+
         {/* Colors */}
         <div className="flex-1">
           <h3 className="text-sm font-semibold text-gray-300 mb-2">
             Colors Found ({colors.length}):
+            {teamOverrides && (
+              <span className="ml-2 text-green-400">
+                ({teamOverrides.colors?.length || 0} overrides configured)
+              </span>
+            )}
           </h3>
-          <ul className="space-y-1 mb-4">
-            {colors.map((color) => (
-              <li
-                key={color}
-                className="flex items-center gap-2 text-xs font-mono p-2 bg-gray-800 rounded"
-              >
-                <div
-                  className="w-8 h-8 border border-gray-600 rounded"
-                  style={{ backgroundColor: color }}
-                />
-                <span className="text-gray-300">{color}</span>
-              </li>
-            ))}
+          <ul className="space-y-1 mb-4 max-h-64 overflow-y-auto">
+            {colors.map((color) => {
+              const match = overrideMatches[color];
+              const hasOverride = match?.matched;
+              return (
+                <li
+                  key={color}
+                  className={`flex items-center gap-2 text-xs font-mono p-2 rounded ${
+                    hasOverride ? 'bg-green-900/30 border border-green-700' : 'bg-gray-800'
+                  }`}
+                >
+                  <div
+                    className="w-8 h-8 border border-gray-600 rounded"
+                    style={{ backgroundColor: color }}
+                  />
+                  <span className="text-gray-300 flex-1">{color}</span>
+                  {hasOverride ? (
+                    <div className="flex items-center gap-2">
+                      <span className="text-green-400">✓ Override</span>
+                      {match.overrideTo && (
+                        <div
+                          className="w-6 h-6 border border-gray-600 rounded"
+                          style={{ backgroundColor: match.overrideTo }}
+                          title={match.overrideTo}
+                        />
+                      )}
+                    </div>
+                  ) : (
+                    <span className="text-yellow-400">→ Luminance fallback</span>
+                  )}
+                </li>
+              );
+            })}
           </ul>
+          {teamOverrides?.notes && (
+            <p className="text-xs text-gray-500 mb-2 italic">{teamOverrides.notes}</p>
+          )}
           {colors.length > 0 && (
             <button
               onClick={copyOverride}
