@@ -70,38 +70,30 @@ export function TeamLogo({ abbr, className = '', size = 24 }: { abbr: string; cl
   const containerRef = useRef<HTMLDivElement>(null);
   
   useEffect(() => {
-    if (!containerRef.current) return;
+    const container = containerRef.current;
+    if (!container) return;
 
-    // Use multiple retries to ensure SVG is fully rendered
-    // Some SVGs with use elements or external references need more time
     const processSvg = () => {
-      const svgElement = containerRef.current?.querySelector('svg');
-      if (svgElement) {
+      const svg = container.querySelector('svg');
+      if (svg && svg.children.length > 0) {
         // Process the SVG to convert colors to white/gray
         // Pass team abbreviation for team-specific color overrides
-        processSvgToMonochrome(svgElement, abbr);
-        return true; // Successfully processed
+        processSvgToMonochrome(svg, abbr);
       }
-      return false; // SVG not ready yet
     };
 
-    // Try immediately first
-    if (processSvg()) return;
-
-    // Retry after one frame
-    requestAnimationFrame(() => {
-      if (processSvg()) return;
-
-      // Retry after a short delay (for async SVGs)
-      setTimeout(() => {
-        processSvg();
-      }, 50);
-
-      // Final retry after longer delay (for complex SVGs with use elements)
-      setTimeout(() => {
-        processSvg();
-      }, 200);
+    // Use MutationObserver to watch for SVG element additions/changes
+    // More reliable than time-based retries
+    const observer = new MutationObserver(() => {
+      processSvg();
     });
+
+    observer.observe(container, { childList: true, subtree: true });
+    
+    // Also try immediately
+    processSvg();
+
+    return () => observer.disconnect();
   }, [abbr, size]); // Re-process if team or size changes
   
   if (!LogoComponent) {
