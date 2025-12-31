@@ -72,22 +72,35 @@ export function TeamLogo({ abbr, className = '', size = 24 }: { abbr: string; cl
   useEffect(() => {
     if (!containerRef.current) return;
 
-    // Use requestAnimationFrame to ensure SVG is fully rendered
+    // Use multiple retries to ensure SVG is fully rendered
+    // Some SVGs with use elements or external references need more time
     const processSvg = () => {
       const svgElement = containerRef.current?.querySelector('svg');
       if (svgElement) {
         // Process the SVG to convert colors to white/gray
         // Pass team abbreviation for team-specific color overrides
         processSvgToMonochrome(svgElement, abbr);
+        return true; // Successfully processed
       }
+      return false; // SVG not ready yet
     };
 
     // Try immediately first
-    processSvg();
+    if (processSvg()) return;
 
-    // Also try after a frame in case the SVG renders asynchronously
+    // Retry after one frame
     requestAnimationFrame(() => {
-      processSvg();
+      if (processSvg()) return;
+
+      // Retry after a short delay (for async SVGs)
+      setTimeout(() => {
+        processSvg();
+      }, 50);
+
+      // Final retry after longer delay (for complex SVGs with use elements)
+      setTimeout(() => {
+        processSvg();
+      }, 200);
     });
   }, [abbr, size]); // Re-process if team or size changes
   

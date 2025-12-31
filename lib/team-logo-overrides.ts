@@ -32,7 +32,9 @@ export const TEAM_LOGO_OVERRIDES: Record<string, TeamLogoOverride> = {
       { from: '#E03A3E', to: 'rgb(215, 215, 215)' }, // Hawks red → light gray
       { from: '#C1D32F', to: 'rgb(235, 235, 235)' }, // Volt green → very light gray
       { from: '#26282A', to: 'rgb(175, 175, 175)' }, // Black outlines → medium gray
+      { from: '#000000', to: 'rgb(175, 175, 175)' }, // Black → medium gray
       { from: '#FFFFFF', to: 'rgb(250, 250, 250)' }, // White → near white
+      { from: 'rgb(255, 255, 255)', to: 'rgb(250, 250, 250)' }, // White (rgb format) → near white
     ],
     notes: 'Hawk PAC-MAN shape needs outline contrast',
   },
@@ -257,6 +259,9 @@ export const TEAM_LOGO_OVERRIDES: Record<string, TeamLogoOverride> = {
       { from: '#236192', to: 'rgb(205, 205, 205)' }, // Blue → medium-light gray
       { from: '#9EA2A2', to: 'rgb(230, 230, 230)' }, // Gray → light gray
       { from: '#78BE20', to: 'rgb(240, 240, 240)' }, // Green → near white
+      { from: '#000000', to: 'rgb(180, 180, 180)' }, // Black → medium gray
+      { from: '#FFFFFF', to: 'rgb(250, 250, 250)' }, // White → near white
+      { from: 'rgb(255, 255, 255)', to: 'rgb(250, 250, 250)' }, // White (rgb format) → near white
     ],
     notes: 'Wolf fur texture details',
   },

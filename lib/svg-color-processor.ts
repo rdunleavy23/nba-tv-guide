@@ -23,24 +23,37 @@ function calculateLuminance(r: number, g: number, b: number): number {
 
 /**
  * Parse a color string (hex, rgb, rgba, or named color) to RGB values
+ * Supports 3-digit hex, 6-digit hex, rgb(), rgba(), and named colors
  */
 function parseColorToRgb(color: string): { r: number; g: number; b: number } | null {
   if (!color || color === 'none' || color === 'transparent') {
     return null;
   }
 
-  // Handle hex colors (#RGB, #RRGGBB)
-  const hexMatch = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(color);
-  if (hexMatch) {
+  const normalized = color.trim();
+
+  // Handle 3-digit hex colors (#RGB)
+  const hex3Match = /^#?([a-f\d])([a-f\d])([a-f\d])$/i.exec(normalized);
+  if (hex3Match) {
     return {
-      r: parseInt(hexMatch[1], 16),
-      g: parseInt(hexMatch[2], 16),
-      b: parseInt(hexMatch[3], 16),
+      r: parseInt(hex3Match[1] + hex3Match[1], 16),
+      g: parseInt(hex3Match[2] + hex3Match[2], 16),
+      b: parseInt(hex3Match[3] + hex3Match[3], 16),
+    };
+  }
+
+  // Handle 6-digit hex colors (#RRGGBB)
+  const hex6Match = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(normalized);
+  if (hex6Match) {
+    return {
+      r: parseInt(hex6Match[1], 16),
+      g: parseInt(hex6Match[2], 16),
+      b: parseInt(hex6Match[3], 16),
     };
   }
 
   // Handle rgb/rgba colors
-  const rgbMatch = /rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(color);
+  const rgbMatch = /rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(normalized);
   if (rgbMatch) {
     return {
       r: parseInt(rgbMatch[1], 10),
@@ -63,9 +76,9 @@ function parseColorToRgb(color: string): { r: number; g: number; b: number } | n
     grey: { r: 128, g: 128, b: 128 },
   };
 
-  const normalized = color.toLowerCase().trim();
-  if (namedColors[normalized]) {
-    return namedColors[normalized];
+  const lowerNormalized = normalized.toLowerCase();
+  if (namedColors[lowerNormalized]) {
+    return namedColors[lowerNormalized];
   }
 
   return null;
@@ -89,6 +102,7 @@ function colorsMatch(
 
 /**
  * Find a matching color override for the given color
+ * Uses increased tolerance to handle color space conversions and rounding
  */
 function findColorOverride(
   color: { r: number; g: number; b: number },
@@ -97,8 +111,8 @@ function findColorOverride(
   for (const override of overrides) {
     const fromColor = parseColorToRgb(override.from);
     if (fromColor) {
-      // Use tolerance, default to 20 for better matching
-      const tolerance = override.tolerance ?? 20;
+      // Use tolerance, default to 35 for better matching (handles color space conversions)
+      const tolerance = override.tolerance ?? 35;
       if (colorsMatch(color, fromColor, tolerance)) {
         return override.to;
       }
@@ -109,11 +123,35 @@ function findColorOverride(
 
 /**
  * Get computed fill color from an SVG element
+ * Handles currentColor, inherit, and resolves from computed styles
  */
 function getComputedFillColor(element: SVGElement): string | null {
   // First check explicit fill attribute
   const fillAttr = element.getAttribute('fill');
-  if (fillAttr && fillAttr !== 'none' && fillAttr !== 'transparent' && fillAttr !== 'inherit') {
+  if (fillAttr && fillAttr !== 'none' && fillAttr !== 'transparent') {
+    // Handle currentColor - resolve from CSS color property
+    if (fillAttr === 'currentColor' || fillAttr === 'inherit') {
+      if (typeof window !== 'undefined') {
+        try {
+          const computed = window.getComputedStyle(element);
+          const color = computed.color;
+          if (color && color !== 'rgba(0, 0, 0, 0)') {
+            return color;
+          }
+          // Try parent element for inherit
+          if (fillAttr === 'inherit' && element.parentElement) {
+            const parentComputed = window.getComputedStyle(element.parentElement);
+            const parentColor = parentComputed.color || parentComputed.fill;
+            if (parentColor && parentColor !== 'rgba(0, 0, 0, 0)') {
+              return parentColor;
+            }
+          }
+        } catch (e) {
+          // Ignore errors
+        }
+      }
+      return null;
+    }
     return fillAttr;
   }
 
@@ -122,7 +160,7 @@ function getComputedFillColor(element: SVGElement): string | null {
     try {
       const computed = window.getComputedStyle(element);
       const fill = computed.fill;
-      if (fill && fill !== 'none' && fill !== 'transparent') {
+      if (fill && fill !== 'none' && fill !== 'transparent' && fill !== 'rgba(0, 0, 0, 0)') {
         // Process all colors including black (rgb(0, 0, 0))
         return fill;
       }
@@ -138,11 +176,23 @@ function getComputedFillColor(element: SVGElement): string | null {
  * Process a single SVG element and replace its fill color based on luminance
  * Checks team-specific overrides first, then falls back to luminance calculation
  */
-function processSvgElement(element: SVGElement, teamAbbr?: string): void {
-  // Skip elements that shouldn't have fills (like defs, masks, etc.)
-  const skipTags = ['defs', 'mask', 'clipPath', 'pattern', 'linearGradient', 'radialGradient'];
-  if (skipTags.includes(element.tagName.toLowerCase())) {
+function processSvgElement(element: SVGElement, teamAbbr?: string, processedSet?: Set<SVGElement>): void {
+  // Skip if already processed
+  if (processedSet?.has(element)) {
     return;
+  }
+
+  // Skip elements that shouldn't have fills (like defs, masks, etc.)
+  // But we'll process gradient stops separately
+  const skipTags = ['defs', 'mask', 'clipPath', 'pattern'];
+  const tagName = element.tagName.toLowerCase();
+  if (skipTags.includes(tagName)) {
+    return;
+  }
+
+  // Mark as processed
+  if (processedSet) {
+    processedSet.add(element);
   }
 
   const fillColor = getComputedFillColor(element);
@@ -213,28 +263,60 @@ function processSvgElement(element: SVGElement, teamAbbr?: string): void {
 export function processSvgToMonochrome(svgElement: SVGElement | null, teamAbbr?: string): void {
   if (!svgElement) return;
 
-  // Find all elements that can have fill colors
-  // Process in order: paths, shapes, then groups (to handle nested structures)
+  // Track processed elements to avoid double processing
+  const processedSet = new Set<SVGElement>();
+
+  // First, process gradient stops (they're referenced by other elements)
+  const gradientStops = svgElement.querySelectorAll<SVGElement>('linearGradient stop, radialGradient stop');
+  gradientStops.forEach((stop) => {
+    processSvgElement(stop, teamAbbr, processedSet);
+  });
+
+  // Process groups first (before their children) to avoid overwriting
+  const groups = svgElement.querySelectorAll<SVGElement>('g');
+  groups.forEach((group) => {
+    // Only process group if it has explicit fill (not just for children)
+    const groupFill = group.getAttribute('fill');
+    if (groupFill && groupFill !== 'none' && groupFill !== 'transparent') {
+      processSvgElement(group, teamAbbr, processedSet);
+    }
+  });
+
+  // Process all shape and text elements (excluding those already in groups we processed)
   const elementsToProcess = svgElement.querySelectorAll<SVGElement>(
-    'path, circle, ellipse, rect, polygon, polyline, line, text, tspan, use'
+    'path, circle, ellipse, rect, polygon, polyline, line, text, tspan'
   );
 
   elementsToProcess.forEach((element) => {
-    processSvgElement(element, teamAbbr);
+    // Skip if this element is a child of a group we already processed
+    let isInProcessedGroup = false;
+    let parent: Element | null = element.parentElement;
+    while (parent && parent !== svgElement) {
+      if (parent.tagName.toLowerCase() === 'g' && parent instanceof SVGElement && processedSet.has(parent)) {
+        isInProcessedGroup = true;
+        break;
+      }
+      parent = parent.parentElement;
+    }
+    
+    if (!isInProcessedGroup) {
+      processSvgElement(element, teamAbbr, processedSet);
+    }
   });
 
-  // Process groups and their direct children
-  const groups = svgElement.querySelectorAll<SVGElement>('g');
-  groups.forEach((group) => {
-    // Process the group itself if it has fill
-    processSvgElement(group, teamAbbr);
-
-    // Process direct children
-    Array.from(group.children).forEach((child) => {
-      if (child instanceof SVGElement) {
-        processSvgElement(child, teamAbbr);
+  // Process use elements last (they reference other elements)
+  const useElements = svgElement.querySelectorAll<SVGElement>('use');
+  useElements.forEach((use) => {
+    processSvgElement(use, teamAbbr, processedSet);
+    // Also process the referenced element if it exists
+    const href = use.getAttribute('href') || use.getAttribute('xlink:href');
+    if (href) {
+      const referencedId = href.replace('#', '');
+      const referenced = svgElement.querySelector(`#${referencedId}`);
+      if (referenced instanceof SVGElement) {
+        processSvgElement(referenced, teamAbbr, processedSet);
       }
-    });
+    }
   });
 }
 
