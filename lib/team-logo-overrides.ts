@@ -54,11 +54,11 @@ export const TEAM_LOGO_OVERRIDES: Record<string, TeamLogoOverride> = {
   'BKN': {
     // Brooklyn Nets - Black and white shield
     colors: [
-      { from: '#000000', to: 'rgb(190, 190, 190)' }, // Black → medium gray
+      { from: '#000000', to: 'rgb(175, 175, 175)' }, // Black → darker gray (changed from 190 to 175 for better contrast)
       { from: '#FFFFFF', to: 'rgb(250, 250, 250)' }, // White → near white
       { from: '#777D84', to: 'rgb(210, 210, 210)' }, // Gray → light gray
     ],
-    notes: 'Shield outline needs visibility on dark background',
+    notes: 'Shield outline needs visibility on dark background - adjusted black to darker gray',
   },
 
   'CHA': {
@@ -68,8 +68,9 @@ export const TEAM_LOGO_OVERRIDES: Record<string, TeamLogoOverride> = {
       { from: '#1D1160', to: 'rgb(185, 185, 185)' }, // Purple → medium gray
       { from: '#A1A1A4', to: 'rgb(225, 225, 225)' }, // Silver → light gray
       { from: '#FFFFFF', to: 'rgb(245, 245, 245)' }, // White → very light gray
+      { from: '#000000', to: 'rgb(175, 175, 175)' }, // Black → darker gray for wing/body outlines
     ],
-    notes: 'Hornet wings and body stripes need contrast',
+    notes: 'Hornet wings and body stripes need contrast - added black for outlines',
   },
 
   'CHI': {
@@ -98,9 +99,10 @@ export const TEAM_LOGO_OVERRIDES: Record<string, TeamLogoOverride> = {
     colors: [
       { from: '#C8102E', to: 'rgb(220, 220, 220)' }, // Red → light gray
       { from: '#006BB6', to: 'rgb(200, 200, 200)' }, // Blue → medium-light gray
-      { from: '#000000', to: 'rgb(170, 170, 170)' }, // Black → darker gray
+      { from: '#000000', to: 'rgb(170, 170, 170)' }, // Black → darker gray for horse/wheel outlines
+      { from: '#FFFFFF', to: 'rgb(250, 250, 250)' }, // White → near white for highlights
     ],
-    notes: 'Horse mane details need separation',
+    notes: 'Horse mane details need separation - added white for highlights',
   },
 
   'IND': {
@@ -128,8 +130,10 @@ export const TEAM_LOGO_OVERRIDES: Record<string, TeamLogoOverride> = {
       { from: '#00471B', to: 'rgb(190, 190, 190)' }, // Hunter green → medium gray
       { from: '#EEE1C6', to: 'rgb(245, 245, 245)' }, // Cream → very light gray
       { from: '#0077C0', to: 'rgb(210, 210, 210)' }, // Blue accents → light gray
+      { from: '#000000', to: 'rgb(170, 170, 170)' }, // Black → darker gray for antler outlines
+      { from: '#FFFFFF', to: 'rgb(250, 250, 250)' }, // White → near white for highlights
     ],
-    notes: 'Deer antlers need clear definition',
+    notes: 'Deer antlers need clear definition - added black/white for outlines',
   },
 
   'NYK': {
@@ -158,8 +162,9 @@ export const TEAM_LOGO_OVERRIDES: Record<string, TeamLogoOverride> = {
       { from: '#ED174C', to: 'rgb(220, 220, 220)' }, // Red → light gray
       { from: '#002B5C', to: 'rgb(175, 175, 175)' }, // Dark blue → darker gray (stars)
       { from: '#FFFFFF', to: 'rgb(250, 250, 250)' }, // White → near white
+      { from: '#000000', to: 'rgb(170, 170, 170)' }, // Black → darker gray for '76' text outlines
     ],
-    notes: 'CRITICAL: 76 with stars must be visible - this is the reference logo',
+    notes: 'CRITICAL: 76 with stars must be visible - added black for text outlines',
   },
 
   'TOR': {
@@ -178,8 +183,10 @@ export const TEAM_LOGO_OVERRIDES: Record<string, TeamLogoOverride> = {
       { from: '#002B5C', to: 'rgb(195, 195, 195)' }, // Navy → medium gray
       { from: '#E31837', to: 'rgb(225, 225, 225)' }, // Red → light gray
       { from: '#C4CED4', to: 'rgb(240, 240, 240)' }, // Silver → near white
+      { from: '#000000', to: 'rgb(175, 175, 175)' }, // Black → darker gray for monument outlines
+      { from: '#FFFFFF', to: 'rgb(250, 250, 250)' }, // White → near white for highlights
     ],
-    notes: 'Monument/wizard details',
+    notes: 'Monument/wizard details - added black/white for outlines',
   },
 
   // WESTERN CONFERENCE
@@ -200,8 +207,10 @@ export const TEAM_LOGO_OVERRIDES: Record<string, TeamLogoOverride> = {
       { from: '#0E2240', to: 'rgb(185, 185, 185)' }, // Navy → medium gray
       { from: '#FEC524', to: 'rgb(245, 245, 245)' }, // Gold → very light gray
       { from: '#8B2131', to: 'rgb(210, 210, 210)' }, // Burgundy → light gray
+      { from: '#000000', to: 'rgb(170, 170, 170)' }, // Black → darker gray for pickaxe outlines
+      { from: '#FFFFFF', to: 'rgb(250, 250, 250)' }, // White → near white for highlights
     ],
-    notes: 'Mountain peaks and pickaxe need contrast',
+    notes: 'Mountain peaks and pickaxe need contrast - added black/white for outlines',
   },
 
   'GSW': {
@@ -217,10 +226,11 @@ export const TEAM_LOGO_OVERRIDES: Record<string, TeamLogoOverride> = {
     // Houston Rockets - Red rocket
     colors: [
       { from: '#CE1141', to: 'rgb(220, 220, 220)' }, // Red → light gray
-      { from: '#000000', to: 'rgb(175, 175, 175)' }, // Black → medium gray
+      { from: '#000000', to: 'rgb(175, 175, 175)' }, // Black → medium gray for 'R' text and outlines
       { from: '#C4CED4', to: 'rgb(240, 240, 240)' }, // Silver → near white
+      { from: '#FFFFFF', to: 'rgb(250, 250, 250)' }, // White → near white for text highlights
     ],
-    notes: 'Rocket flame details',
+    notes: 'Rocket flame details - added white for text highlights',
   },
 
   'LAC': {
@@ -238,8 +248,10 @@ export const TEAM_LOGO_OVERRIDES: Record<string, TeamLogoOverride> = {
     colors: [
       { from: '#552583', to: 'rgb(200, 200, 200)' }, // Purple → medium-light gray
       { from: '#FDB927', to: 'rgb(240, 240, 240)' }, // Gold → near white
+      { from: '#000000', to: 'rgb(180, 180, 180)' }, // Black → darker gray for text outlines
+      { from: '#FFFFFF', to: 'rgb(250, 250, 250)' }, // White → near white for text highlights
     ],
-    notes: 'Text readability critical',
+    notes: 'Text readability critical - added black/white for text outlines',
   },
 
   'MEM': {
@@ -248,8 +260,10 @@ export const TEAM_LOGO_OVERRIDES: Record<string, TeamLogoOverride> = {
       { from: '#5D76A9', to: 'rgb(215, 215, 215)' }, // Blue → light gray
       { from: '#12173F', to: 'rgb(180, 180, 180)' }, // Navy → medium gray
       { from: '#F5B112', to: 'rgb(240, 240, 240)' }, // Gold → near white
+      { from: '#000000', to: 'rgb(170, 170, 170)' }, // Black → darker gray for bear details
+      { from: '#FFFFFF', to: 'rgb(250, 250, 250)' }, // White → near white for highlights
     ],
-    notes: 'Bear claw and facial details',
+    notes: 'Bear claw and facial details - added black/white for outlines',
   },
 
   'MIN': {

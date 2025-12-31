@@ -430,8 +430,22 @@ function isTextElement(element: SVGElement): boolean {
 }
 
 /**
+ * Check if two RGB colors match within tolerance (fallback for DeltaE)
+ */
+function colorsMatchRGB(
+  rgb1: RGB,
+  rgb2: RGB,
+  tolerance: number = 20
+): boolean {
+  const rDiff = Math.abs(rgb1.r - rgb2.r);
+  const gDiff = Math.abs(rgb1.g - rgb2.g);
+  const bDiff = Math.abs(rgb1.b - rgb2.b);
+  return rDiff <= tolerance && gDiff <= tolerance && bDiff <= tolerance;
+}
+
+/**
  * Find a matching color override using DeltaE perceptual distance
- * Much more accurate than simple RGB tolerance
+ * Falls back to RGB tolerance if DeltaE doesn't match
  */
 function findColorOverride(
   color: RGB,
@@ -443,12 +457,19 @@ function findColorOverride(
     const fromColor = parseColorToRgb(override.from);
     if (fromColor) {
       const fromLab = rgbToLab(fromColor.r, fromColor.g, fromColor.b);
-      // Use DeltaE threshold (default 5.0 = perceptually similar)
+      // Use DeltaE threshold (default 8.0 = perceptually similar, increased from 5.0)
       // Override tolerance is now interpreted as DeltaE threshold
-      const threshold = override.tolerance ?? 5.0;
+      const threshold = override.tolerance ?? 8.0;
       const distance = deltaE(colorLab, fromLab);
       
       if (distance < threshold) {
+        return override.to;
+      }
+      
+      // Fallback: If DeltaE fails, try RGB tolerance (15-20 units)
+      // This catches colors that are close but DeltaE misses
+      const rgbTolerance = 18; // RGB units
+      if (colorsMatchRGB(color, fromColor, rgbTolerance)) {
         return override.to;
       }
     }
@@ -533,7 +554,7 @@ function processSvgElement(element: SVGElement, teamAbbr?: string, processedSet?
       
       // For text elements, ensure font-weight is preserved for readability
       if (isText) {
-        const fontWeight = element.getAttribute('font-weight') || window.getComputedStyle(element).fontWeight;
+        const fontWeight = element.getAttribute('font-weight') || (typeof window !== 'undefined' ? window.getComputedStyle(element).fontWeight : '600');
         if (fontWeight && fontWeight !== 'normal' && fontWeight !== '400') {
           element.setAttribute('font-weight', fontWeight);
         } else {
@@ -552,6 +573,26 @@ function processSvgElement(element: SVGElement, teamAbbr?: string, processedSet?
     // Default to light gray/white for text readability
     element.setAttribute('fill', 'rgb(240, 240, 240)');
     element.setAttribute('font-weight', '600');
+  } else if (!fillColor && isShapeElement(element) && !isIntentionallyTransparent) {
+    // Shape elements without explicit fill default to black per SVG spec
+    // Process them as black to ensure outlines/details are visible
+    const blackRgb: RGB = { r: 0, g: 0, b: 0 };
+    let replacementColor: string | null = null;
+    
+    // Check team-specific overrides for black
+    if (teamAbbr) {
+      const teamOverride = TEAM_LOGO_OVERRIDES[teamAbbr.toUpperCase()];
+      if (teamOverride?.colors) {
+        replacementColor = findColorOverride(blackRgb, teamOverride.colors);
+      }
+    }
+    
+    // Fall back to darker gray for black elements (outlines/details)
+    if (!replacementColor) {
+      replacementColor = 'rgb(170, 170, 170)'; // Default darker gray for black outlines
+    }
+    
+    element.setAttribute('fill', replacementColor);
   }
 
   // Also handle stroke if present
