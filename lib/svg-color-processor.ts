@@ -364,15 +364,27 @@ function parseColorToRgb(color: string): RGB | null {
  * Get actual rendered color from an SVG element using computed styles
  * CRITICAL: Always uses computed style to catch elements without explicit fills
  * SVG shape elements default to black fill if not specified
+ * For text elements, also checks CSS 'color' property
  */
 function getActualRenderedColor(element: SVGElement, property: 'fill' | 'stroke'): string | null {
   if (typeof window === 'undefined') return null;
 
   try {
     const computed = window.getComputedStyle(element);
-    const color = computed[property];
+    let color = computed[property];
     const opacityKey = `${property}-opacity` as keyof CSSStyleDeclaration;
-    const opacity = parseFloat((computed[opacityKey] as string) || '1');
+    let opacity = parseFloat((computed[opacityKey] as string) || '1');
+    
+    // For text elements, also check CSS 'color' property if fill is not set
+    if (isTextElement(element) && (!color || color === 'none' || color === 'transparent' || color === 'rgba(0, 0, 0, 0)')) {
+      const cssColor = computed.color;
+      if (cssColor && cssColor !== 'rgba(0, 0, 0, 0)') {
+        color = cssColor;
+        // Text elements might have opacity via color opacity
+        const colorOpacity = parseFloat((computed.opacity as string) || '1');
+        opacity = colorOpacity;
+      }
+    }
     
     // If color is 'none' or 'transparent', return null
     if (!color || color === 'none' || color === 'transparent' || color === 'rgba(0, 0, 0, 0)') {
@@ -383,7 +395,7 @@ function getActualRenderedColor(element: SVGElement, property: 'fill' | 'stroke'
     if (color === 'currentColor') {
       const cssColor = computed.color;
       if (cssColor && cssColor !== 'rgba(0, 0, 0, 0)') {
-        return cssColor;
+        color = cssColor;
       }
     }
     
@@ -407,6 +419,14 @@ function getActualRenderedColor(element: SVGElement, property: 'fill' | 'stroke'
 function isShapeElement(element: SVGElement): boolean {
   const shapeTags = ['path', 'circle', 'ellipse', 'rect', 'polygon', 'polyline', 'line', 'text', 'tspan'];
   return shapeTags.includes(element.tagName.toLowerCase());
+}
+
+/**
+ * Check if element is a text element
+ */
+function isTextElement(element: SVGElement): boolean {
+  const textTags = ['text', 'tspan'];
+  return textTags.includes(element.tagName.toLowerCase());
 }
 
 /**
@@ -439,9 +459,18 @@ function findColorOverride(
 /**
  * Calculate contrast-preserving grayscale value
  * Uses wider range (50-250) to preserve relative brightness relationships
+ * For text elements, ensures higher contrast for readability
  */
-function calculateContrastPreservingGray(rgb: RGB): string {
+function calculateContrastPreservingGray(rgb: RGB, isText: boolean = false): string {
   const luminance = calculateLuminance(rgb.r, rgb.g, rgb.b);
+  
+  if (isText) {
+    // Text needs higher contrast - map to lighter grays for better readability
+    // Original dark text → medium gray, original light text → very light gray/white
+    const grayValue = Math.round(180 + (luminance * 75)); // 180-255 range for text
+    return `rgb(${grayValue}, ${grayValue}, ${grayValue})`;
+  }
+  
   // Map to wider range: dark colors → darker gray, light colors → lighter gray
   // Maintain relative differences: if color A is brighter than B, gray A > gray B
   const grayValue = Math.round(50 + (luminance * 200)); // 50-250 range
@@ -478,6 +507,8 @@ function processSvgElement(element: SVGElement, teamAbbr?: string, processedSet?
   const fillAttr = element.getAttribute('fill');
   const isIntentionallyTransparent = fillAttr === 'none' || fillAttr === 'transparent';
 
+  const isText = isTextElement(element);
+  
   if (fillColor) {
     // Process this element - this now catches elements without explicit fills
     const rgb = parseColorToRgb(fillColor);
@@ -493,16 +524,34 @@ function processSvgElement(element: SVGElement, teamAbbr?: string, processedSet?
       }
 
       // Fall back to contrast-preserving calculation if no override found
+      // Text elements get higher contrast for readability
       if (!replacementColor) {
-        replacementColor = calculateContrastPreservingGray(rgb);
+        replacementColor = calculateContrastPreservingGray(rgb, isText);
       }
 
       element.setAttribute('fill', replacementColor);
+      
+      // For text elements, ensure font-weight is preserved for readability
+      if (isText) {
+        const fontWeight = element.getAttribute('font-weight') || window.getComputedStyle(element).fontWeight;
+        if (fontWeight && fontWeight !== 'normal' && fontWeight !== '400') {
+          element.setAttribute('font-weight', fontWeight);
+        } else {
+          // Ensure text is bold enough to be readable
+          element.setAttribute('font-weight', '600');
+        }
+      }
     }
-  } else if (isIntentionallyTransparent && isShapeElement(element)) {
+  } else if (isIntentionallyTransparent && isShapeElement(element) && !isText) {
     // This is an intentional gap - make it darker to create contrast
     // Map to dark gray to preserve the visual separation
+    // Don't apply to text elements (they should use fill or color)
     element.setAttribute('fill', 'rgb(80, 80, 80)'); // Dark gray for gaps
+  } else if (isText && !fillColor) {
+    // Text elements without fill should use a visible color
+    // Default to light gray/white for text readability
+    element.setAttribute('fill', 'rgb(240, 240, 240)');
+    element.setAttribute('font-weight', '600');
   }
 
   // Also handle stroke if present
@@ -521,8 +570,9 @@ function processSvgElement(element: SVGElement, teamAbbr?: string, processedSet?
       }
 
       // Fall back to contrast-preserving calculation
+      // Text strokes also need higher contrast
       if (!strokeReplacement) {
-        strokeReplacement = calculateContrastPreservingGray(strokeRgb);
+        strokeReplacement = calculateContrastPreservingGray(strokeRgb, isText);
       }
 
       element.setAttribute('stroke', strokeReplacement);
