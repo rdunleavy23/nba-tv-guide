@@ -33,8 +33,10 @@ function GameRow({ game }: { game: Game }) {
       </div>
 
       {/* Column 2: Matchup text - flexible */}
-      <span className="text-base font-medium tabular-nums text-center">
-        {String(game.teams.away.abbr || 'UNK')} @ {String(game.teams.home.abbr || 'UNK')}
+      <span className="text-base tabular-nums text-center">
+        <span className="font-semibold tracking-wide">{String(game.teams.away.abbr || 'UNK')}</span>
+        <span className="text-sm text-muted-foreground/70 font-medium px-1">@</span>
+        <span className="font-semibold tracking-wide">{String(game.teams.home.abbr || 'UNK')}</span>
       </span>
 
       {/* Column 3: Home team glyph - fixed 28px */}
@@ -45,7 +47,7 @@ function GameRow({ game }: { game: Game }) {
       {/* Column 4: Time - fixed 88px */}
       <GameTime
         utcTime={game.startTimeUtc}
-        className="text-right text-sm tabular-nums text-muted-foreground"
+        className="text-right text-xs tabular-nums text-muted-foreground/80 font-medium"
       />
 
       {/* Column 5: Badge - fixed 72px */}
