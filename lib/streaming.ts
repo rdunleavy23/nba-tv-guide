@@ -56,6 +56,7 @@ function makeOptionForPlatform(
           web: `https://www.espn.com/nba/game/_/gameId/${espnGameId}`,
         },
         defaultPriority: 10,
+        openInNewTab: true, // Normal website
       };
     case 'abc':
       return {
@@ -66,6 +67,7 @@ function makeOptionForPlatform(
           web: 'https://abc.com/watch-live',
         },
         defaultPriority: 20,
+        openInNewTab: true, // Normal website
       };
     case 'nbc':
       return {
@@ -76,6 +78,7 @@ function makeOptionForPlatform(
           web: 'https://www.nbc.com/live',
         },
         defaultPriority: 30,
+        openInNewTab: true, // Normal website
       };
     case 'peacock':
       return {
@@ -86,6 +89,7 @@ function makeOptionForPlatform(
           web: 'https://www.peacocktv.com/sports/nba',
         },
         defaultPriority: 40,
+        openInNewTab: true, // Normal website
       };
     case 'prime_video':
       return {
@@ -96,6 +100,7 @@ function makeOptionForPlatform(
           web: 'https://www.amazon.com/gp/video/storefront/ref=atv_nb_live',
         },
         defaultPriority: 50,
+        openInNewTab: true, // Normal website
       };
     case 'nba_tv':
       return {
@@ -106,6 +111,7 @@ function makeOptionForPlatform(
           web: 'https://www.nba.com/watch/league-pass-stream',
         },
         defaultPriority: 60,
+        openInNewTab: true, // Normal website (could be universal link, but currently https)
       };
     case 'league_pass':
       return {
@@ -116,6 +122,7 @@ function makeOptionForPlatform(
           web: `https://www.nba.com/game/${espnGameId}`,
         },
         defaultPriority: 70,
+        openInNewTab: false, // Could be universal link or deep link - don't force new tab
       };
     case 'info':
     case 'other':
@@ -128,6 +135,7 @@ function makeOptionForPlatform(
           web: `https://www.espn.com/nba/game/_/gameId/${espnGameId}`,
         },
         defaultPriority: 999,
+        openInNewTab: true, // Normal website
       };
   }
 }
@@ -166,6 +174,7 @@ export function buildStreamingOptions(
         web: `https://www.espn.com/nba/game/_/gameId/${espnGameId}`,
       },
       defaultPriority: 999,
+      openInNewTab: true, // Normal website
     });
   }
 

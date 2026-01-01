@@ -28,6 +28,7 @@ export interface StreamingOption {
   kind: StreamingKind;
   links: StreamingLinks;
   defaultPriority: number; // Lower = better for default ordering
+  openInNewTab?: boolean; // true for normal websites, false/undefined for deep links
 }
 
 export interface UserStreamingPrefs {

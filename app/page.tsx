@@ -1,5 +1,5 @@
 import { Suspense } from 'react';
-import { AnswerChip } from '@/components/answer-chip';
+import { ChannelLinkButton } from '@/components/channel-link-button';
 import type { Game } from '@/lib/game-types';
 import { SkeletonList } from '@/components/game-skeleton';
 import { ClientWrapper } from '@/components/client-wrapper';
@@ -18,21 +18,21 @@ import { normalizeTeamAbbreviation } from '@/lib/team-abbreviations';
 
 export const runtime = 'edge';
 
-// Game row component - clickable to streaming destination
+// Game row component - channel button handles navigation
 function GameRow({ game }: { game: Game }) {
+  const matchupLabel = `${game.teams.away.abbr} at ${game.teams.home.abbr}`;
+  
   return (
-    <a
-      href={game.primaryOption.links.web}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="group grid grid-cols-[28px_auto_28px_88px_90px] gap-2 items-center px-4 py-4 border-b hover:bg-accent/10 transition-colors cursor-pointer"
+    <article
+      aria-label={matchupLabel}
+      className="grid grid-cols-[28px_1fr_28px_auto] gap-2 items-center px-4 py-3 border-b border-border/30"
     >
       {/* Column 1: Away team glyph - fixed 28px */}
       <div className="flex justify-center">
         <TeamGlyph abbr={game.teams.away.abbr} />
       </div>
 
-      {/* Column 2: Matchup text - flexible */}
+      {/* Column 2: Matchup text - flexible (1fr) */}
       <span className="text-base tabular-nums text-center">
         <span className="font-semibold tracking-wide">{String(game.teams.away.abbr || 'UNK')}</span>
         <span className="text-sm text-muted-foreground/70 font-medium px-1">@</span>
@@ -44,17 +44,15 @@ function GameRow({ game }: { game: Game }) {
         <TeamGlyph abbr={game.teams.home.abbr} />
       </div>
 
-      {/* Column 4: Time - fixed 88px */}
-      <GameTime
-        utcTime={game.startTimeUtc}
-        className="text-right text-xs tabular-nums text-muted-foreground/80 font-medium"
-      />
-
-      {/* Column 5: Badge - fixed 72px */}
-      <div className="flex justify-end">
-        <AnswerChip game={game} />
+      {/* Column 4: Time + Channel chip - flexible (auto) */}
+      <div className="flex items-center justify-end gap-3">
+        <GameTime
+          utcTime={game.startTimeUtc}
+          className="text-right text-xs tabular-nums text-muted-foreground/80 font-medium"
+        />
+        <ChannelLinkButton option={game.primaryOption} />
       </div>
-    </a>
+    </article>
   );
 }
 
