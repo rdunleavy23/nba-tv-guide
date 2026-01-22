@@ -10,24 +10,34 @@ interface ChannelLinkButtonProps {
 }
 
 /**
- * Normalize channel labels to short, consistent forms
+ * Get normalized display label for channel chips
+ * Maps all channel variants to short, consistent labels
  */
-function getShortLabel(label: string): string {
-  const shortLabels: Record<string, string> = {
+function getChannelDisplayLabel(option: StreamingOption): string {
+  const displayLabels: Record<string, string> = {
+    // League Pass variants
+    'LP': 'LP',
     'League Pass': 'LP',
+    // NBA TV
     'NBA TV': 'NBA TV',
+    // Networks
     'ESPN': 'ESPN',
     'ABC': 'ABC',
     'NBC': 'NBC',
+    // OTT
     'Peacock': 'Peacock',
     'Prime': 'Prime',
+    // Fallback
     'TV info TBD': 'TBD',
   };
-  return shortLabels[label] || label.substring(0, 8); // Fallback to first 8 chars
+  
+  // Check by label first, then by id as fallback
+  return displayLabels[option.label] || displayLabels[option.id] || option.label.substring(0, 8);
 }
 
 export function ChannelLinkButton({ option, className = '' }: ChannelLinkButtonProps) {
-  const ariaLabel = `Open ${option.label} in external app (opens externally)`;
+  const displayLabel = getChannelDisplayLabel(option);
+  const ariaLabel = `Open ${displayLabel} in external app`;
   const openInNewTab = option.openInNewTab ?? false; // Default to false for deep links
   
   return (
@@ -36,15 +46,16 @@ export function ChannelLinkButton({ option, className = '' }: ChannelLinkButtonP
       {...(openInNewTab ? { target: "_blank", rel: "noopener noreferrer" } : {})}
       aria-label={ariaLabel}
       className={cn(
-        "inline-flex items-center gap-2 px-2.5 h-9 min-h-10 w-[80px]",
-        "border border-border/40 bg-transparent hover:bg-muted/10",
-        "text-xs font-normal text-foreground/80 rounded-md",
-        "transition-colors",
+        "inline-flex items-center justify-center gap-1.5 h-10 min-w-[88px] px-3",
+        "border border-border/20 bg-muted/30 hover:bg-muted/50",
+        "text-xs font-medium text-foreground/90 rounded-md",
+        "whitespace-nowrap transition-all active:scale-95",
+        "touch-manipulation", // Improves touch responsiveness
         className
       )}
     >
-      <span className="text-xs truncate">{getShortLabel(option.label)}</span>
-      <ArrowUpRight className="h-3.5 w-3.5 opacity-60 shrink-0" aria-hidden="true" />
+      <span className="text-xs whitespace-nowrap">{displayLabel}</span>
+      <ArrowUpRight className="h-3 w-3 opacity-50 shrink-0" aria-hidden="true" />
     </a>
   );
 }

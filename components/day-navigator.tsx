@@ -44,16 +44,16 @@ export function DayNavigator({ currentDate, onDateChange }: DayNavigatorProps) {
   const currentIsToday = isToday(currentDate);
 
   return (
-    <div className="flex items-center gap-1">
+    <div className="flex items-center gap-0.5">
       {/* Previous Day Button */}
       <Button
         variant="ghost"
         size="icon"
         onClick={goToPreviousDay}
         aria-label="Previous day"
-        className="hover:bg-accent/20"
+        className="h-8 w-8 hover:bg-accent/10"
       >
-        <ChevronLeft className="h-5 w-5" />
+        <ChevronLeft className="h-4 w-4" />
       </Button>
 
       {/* Date Picker Popover */}
@@ -61,13 +61,14 @@ export function DayNavigator({ currentDate, onDateChange }: DayNavigatorProps) {
         <PopoverTrigger asChild>
           <Button
             variant="ghost"
-            className={`text-sm tabular-nums px-3 gap-2 h-10 ${
+            className={`text-xs tabular-nums px-2 gap-1.5 h-8 ${
               currentIsToday ? 'bg-accent/10 font-medium' : ''
             }`}
             aria-label="Select date"
           >
-            <CalendarDays className="h-4 w-4 text-muted-foreground" />
-            <span>{formatDate(currentDate)}</span>
+            <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
+            <span className="hidden sm:inline">{formatDate(currentDate)}</span>
+            <span className="sm:hidden">{formatDate(currentDate).split(',')[1]}</span>
           </Button>
         </PopoverTrigger>
 
@@ -90,9 +91,9 @@ export function DayNavigator({ currentDate, onDateChange }: DayNavigatorProps) {
         size="icon"
         onClick={goToNextDay}
         aria-label="Next day"
-        className="hover:bg-accent/20"
+        className="h-8 w-8 hover:bg-accent/10"
       >
-        <ChevronRight className="h-5 w-5" />
+        <ChevronRight className="h-4 w-4" />
       </Button>
     </div>
   );

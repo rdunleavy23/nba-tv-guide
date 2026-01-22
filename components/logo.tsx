@@ -5,7 +5,7 @@ interface LogoProps {
 export function Logo({ className = '' }: LogoProps) {
   return (
     <div className={className}>
-      <span className="text-xl font-bold italic text-foreground dark:text-white">
+      <span className="text-lg font-bold italic text-foreground">
         ScreenAssist
       </span>
     </div>

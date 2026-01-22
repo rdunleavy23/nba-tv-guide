@@ -11,6 +11,7 @@
  */
 
 import { TeamLogo } from '@/components/team-logo';
+import { cn } from '@/lib/utils';
 
 interface TeamGlyphProps {
   abbr: string; // "LAL", "DEN", etc.
@@ -23,14 +24,14 @@ export function TeamGlyph({ abbr, className = '' }: TeamGlyphProps) {
   
   return (
     <span
-      className={`
-        inline-flex h-7 w-7 items-center justify-center
-        rounded-full border border-muted-foreground/20
-        bg-muted/20 ring-1 ring-border/60
-        text-muted-foreground
-        p-0.5
-        ${className}
-      `}
+      className={cn(
+        "inline-flex items-center justify-center",
+        "rounded-full border border-muted-foreground/20",
+        "bg-muted/20 ring-1 ring-border/60",
+        "text-muted-foreground p-0.5",
+        "h-6 w-6",
+        className
+      )}
       aria-label={safeAbbr}
       title={safeAbbr}
     >

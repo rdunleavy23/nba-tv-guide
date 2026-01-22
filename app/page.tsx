@@ -18,39 +18,29 @@ import { normalizeTeamAbbreviation } from '@/lib/team-abbreviations';
 
 export const runtime = 'edge';
 
-// Game row component - channel button handles navigation
 function GameRow({ game }: { game: Game }) {
   const matchupLabel = `${game.teams.away.abbr} at ${game.teams.home.abbr}`;
   
   return (
     <article
       aria-label={matchupLabel}
-      className="grid grid-cols-[28px_1fr_28px_auto] gap-2 items-center px-4 py-3 border-b border-border/30"
+      className="px-4 py-3 border-b border-border/20"
     >
-      {/* Column 1: Away team glyph - fixed 28px */}
-      <div className="flex justify-center">
-        <TeamGlyph abbr={game.teams.away.abbr} />
-      </div>
-
-      {/* Column 2: Matchup text - flexible (1fr) */}
-      <span className="text-base tabular-nums text-center">
-        <span className="font-semibold tracking-wide">{String(game.teams.away.abbr || 'UNK')}</span>
-        <span className="text-sm text-muted-foreground/70 font-medium px-1">@</span>
-        <span className="font-semibold tracking-wide">{String(game.teams.home.abbr || 'UNK')}</span>
-      </span>
-
-      {/* Column 3: Home team glyph - fixed 28px */}
-      <div className="flex justify-center">
-        <TeamGlyph abbr={game.teams.home.abbr} />
-      </div>
-
-      {/* Column 4: Time + Channel chip - flexible (auto) */}
-      <div className="flex items-center justify-end gap-3">
-        <GameTime
-          utcTime={game.startTimeUtc}
-          className="text-right text-xs tabular-nums text-muted-foreground/80 font-medium"
-        />
-        <ChannelLinkButton option={game.primaryOption} />
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <TeamGlyph abbr={game.teams.away.abbr} />
+          <span className="font-semibold">{game.teams.away.abbr}</span>
+          <span className="text-muted-foreground/60">@</span>
+          <span className="font-semibold">{game.teams.home.abbr}</span>
+          <TeamGlyph abbr={game.teams.home.abbr} />
+        </div>
+        <div className="flex items-center gap-3">
+          <GameTime
+            utcTime={game.startTimeUtc}
+            className="text-sm text-muted-foreground/70"
+          />
+          <ChannelLinkButton option={game.primaryOption} />
+        </div>
       </div>
     </article>
   );
@@ -60,8 +50,8 @@ function GameRow({ game }: { game: Game }) {
 function GameList({ games }: { games: Game[] }) {
   if (games.length === 0) {
     return (
-      <div className="p-8 text-center text-muted-foreground text-sm">
-        No games scheduled. Check another day.
+      <div className="px-4 py-12 text-center text-muted-foreground text-sm">
+        No games scheduled
       </div>
     );
   }
@@ -224,17 +214,15 @@ export default async function HomePage({ searchParams }: HomePageProps) {
 
   return (
     <ClientWrapper>
-      <div className="min-h-screen max-w-[640px] md:max-w-[800px] mx-auto px-4">
-        {/* Header */}
-        <header className="py-4 border-b">
-          <div className="flex items-center justify-between">
+      <div className="min-h-screen max-w-[640px] mx-auto">
+        <header className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b">
+          <div className="px-4 py-3 flex items-center justify-between">
             <Logo />
             <DayNavigatorWrapper initialDate={targetDate} />
           </div>
         </header>
 
-        {/* Content */}
-        <main className="py-4">
+        <main>
           <SwipeableGameList currentDate={targetDate}>
             <AnimatedGameList dateKey={targetDate?.toISOString() || new Date().toISOString()}>
               {error ? (
@@ -248,11 +236,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           </SwipeableGameList>
         </main>
 
-        {/* Footer */}
-        <footer className="py-8 text-center space-y-2">
-          <p className="text-xs text-muted-foreground">
-            Refreshes every 30 seconds • Data from ESPN
-          </p>
+        <footer className="px-4 py-6 text-center">
           <SettingsTrigger />
         </footer>
       </div>
